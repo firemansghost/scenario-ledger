@@ -42,9 +42,31 @@ export function DataHealthCard({ data }: DataHealthCardProps) {
         <h3 className="mb-2 text-sm font-medium text-zinc-400">Daily ingest</h3>
         {data.dailyRun ? (
           <>
-            <p className="mb-2 text-xs text-zinc-500">
-              Last run: {new Date(data.dailyRun.runAt).toLocaleString()}
-            </p>
+            <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-zinc-500">
+              <span>Last run: {new Date(data.dailyRun.started_at).toLocaleString()}</span>
+              <span className="font-mono">Run ID: {data.dailyRun.id.slice(0, 8)}</span>
+              {(() => {
+                const ms = data.dailyRun.summary?.duration_ms ?? data.dailyRun.summary?.counts?.duration_ms;
+                return ms != null ? <span>Duration: {(ms / 1000).toFixed(1)}s</span> : null;
+              })()}
+              <span
+                className={
+                  data.dailyRun.status === "success"
+                    ? "text-emerald-400"
+                    : data.dailyRun.status === "partial"
+                      ? "text-amber-400"
+                      : "text-rose-400"
+                }
+              >
+                {data.dailyRun.status}
+              </span>
+              <a
+                href={`/runs/${data.dailyRun.id}`}
+                className="text-zinc-400 underline hover:text-white"
+              >
+                View run details
+              </a>
+            </div>
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
                 <thead>

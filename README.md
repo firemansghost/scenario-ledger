@@ -4,6 +4,13 @@ Frozen forecasts. Weekly receipts.
 
 Next.js 14 app for storing immutable forecast versions, ingesting daily market/macro data, computing weekly scenario probabilities, and tracking alignment vs forecast bands (BTC + SPY/SPX).
 
+**Start here:** [docs/MISSION.md](docs/MISSION.md) — mission and context. See also [docs/PRINCIPLES.md](docs/PRINCIPLES.md), [docs/GLOSSARY.md](docs/GLOSSARY.md), [docs/RUNBOOK.md](docs/RUNBOOK.md), and other files in `/docs`.
+
+## Public UX
+
+- **Public sharing:** Use `/?share=1` for a clean view (banner, scenario, probabilities, evidence summary, no advanced links).
+- **Advanced details (Nerd Mode):** Click “Advanced Details (Nerd Mode)” in the nav to enable Run history, Admin, Data Health, and Receipts. Persists via cookie until you clear it.
+
 ## Setup
 
 1. Copy `.env.example` to `.env` and set:
@@ -28,12 +35,9 @@ Next.js 14 app for storing immutable forecast versions, ingesting daily market/m
 
 **Vercel Cron**: `vercel.json` defines schedules in UTC. Daily runs at 23:20 UTC Mon–Fri (e.g. 17:20 CST / 18:20 CDT Chicago); weekly at 23:35 UTC Friday. Set `CRON_SECRET` in Vercel Project → Settings → Environment Variables; Vercel sends `Authorization: Bearer <CRON_SECRET>` to cron routes.
 
-## Admin mode
+## Nerd Mode and Admin
 
-The app is public; the **Admin** link is hidden by default. To reveal it:
-
-- Visit **`/?admin=1`** once. The Admin link will appear in the nav and stay visible (stored in `localStorage` as `scenarioledger_admin=1`).
-- Admin endpoints remain protected by `ADMIN_SECRET`; this only controls link visibility.
+The app is public. **Runs** and **Admin** are hidden until you enable **Advanced Details (Nerd Mode)** from the Dashboard or nav. Once enabled, a cookie keeps Nerd Mode on. Share mode (`?share=1`) hides these links and blocks direct visits to `/runs` and `/admin`. Admin API endpoints remain protected by `ADMIN_SECRET`.
 
 ## Dashboard data health
 

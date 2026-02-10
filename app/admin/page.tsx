@@ -1,10 +1,25 @@
+import { cookies } from "next/headers";
 import { createServiceRoleClient } from "@/lib/supabaseServer";
 import { DataFetchLogs } from "@/components/data-fetch-logs";
 import { AdminTools } from "@/components/admin-tools";
+import { NerdGateView } from "@/components/NerdGateView";
+import { ShareBlockedView } from "@/components/ShareBlockedView";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminPage() {
+export default async function AdminPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ share?: string }>;
+}) {
+  const params = await searchParams;
+  const shareMode = params?.share === "1";
+  const cookieStore = await cookies();
+  const nerdMode = cookieStore.get("scenarioledger_nerd")?.value === "1";
+
+  if (shareMode) return <ShareBlockedView />;
+  if (!nerdMode) return <NerdGateView />;
+
   const supabase = createServiceRoleClient();
   const { data: logs } = await supabase
     .from("data_fetch_logs")

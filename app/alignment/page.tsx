@@ -1,7 +1,8 @@
 import { createClient } from "@/lib/supabaseClient";
 import { AlignmentChart } from "@/components/alignment-chart";
+import { MissionBanner } from "@/components/MissionBanner";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export default async function AlignmentPage() {
   const supabase = createClient();
@@ -21,6 +22,7 @@ export default async function AlignmentPage() {
 
   return (
     <div className="space-y-6">
+      <MissionBanner />
       <h1 className="text-xl font-semibold">Alignment</h1>
       <p className="text-sm text-zinc-400">
         BTC/SPY vs forecast bands by scenario. Drift = % outside band. SPX band + SPX-equiv close + SPY actual.

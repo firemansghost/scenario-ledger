@@ -2,7 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabaseClient";
 import { ForecastSelector } from "@/components/forecast-selector";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export default async function ForecastsPage() {
   const supabase = createClient();

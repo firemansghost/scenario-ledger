@@ -9,14 +9,17 @@ interface ReceiptsPanelProps {
   weekEnding: string;
   indicatorRows: EvidenceRow[];
   definitions: EvidenceDefinition[];
+  /** When true, receipts are expanded by default (e.g. in Nerd Mode). */
+  initialOpen?: boolean;
 }
 
 export function ReceiptsPanel({
   weekEnding,
   indicatorRows,
   definitions,
+  initialOpen = false,
 }: ReceiptsPanelProps) {
-  const [show, setShow] = useState(false);
+  const [show, setShow] = useState(initialOpen);
 
   return (
     <section className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-4">
