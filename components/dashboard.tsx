@@ -1,16 +1,30 @@
 import { createClient } from "@/lib/supabaseClient";
+import { createServiceRoleClient } from "@/lib/supabaseServer";
+import { getDataHealth } from "@/lib/dataHealth";
+import { getEvidenceForWeek } from "@/lib/getEvidenceForWeek";
+import { DataHealthCard } from "@/components/DataHealthCard";
 import { DataStatusBadge } from "@/components/data-status-badge";
 import { ProbabilityBar } from "@/components/probability-bar";
+import { ReceiptsPanel } from "@/components/ReceiptsPanel";
 import { ScenarioCard } from "@/components/scenario-card";
 
 export async function Dashboard() {
   const supabase = createClient();
+  const supabaseService = createServiceRoleClient();
+
   const { data: snapshot } = await supabase
     .from("weekly_snapshots")
     .select("*")
     .order("week_ending", { ascending: false })
     .limit(1)
     .maybeSingle();
+
+  const [dataHealth, evidence] = await Promise.all([
+    getDataHealth(supabaseService),
+    snapshot
+      ? getEvidenceForWeek(supabase, String(snapshot.week_ending))
+      : Promise.resolve({ indicatorRows: [], definitions: [] }),
+  ]);
 
   const { data: forecast } = snapshot
     ? await supabase.from("forecasts").select("config").eq("id", snapshot.forecast_id).single()
@@ -20,6 +34,7 @@ export async function Dashboard() {
 
   return (
     <div className="space-y-6">
+      <DataHealthCard data={dataHealth} />
       {snapshot ? (
         <>
           <ScenarioCard
@@ -62,6 +77,11 @@ export async function Dashboard() {
           <DataStatusBadge
             dataCompleteness={snapshot.data_completeness}
             weekEnding={snapshot.week_ending}
+          />
+          <ReceiptsPanel
+            weekEnding={String(snapshot.week_ending)}
+            indicatorRows={evidence.indicatorRows}
+            definitions={evidence.definitions}
           />
         </>
       ) : (

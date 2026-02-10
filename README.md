@@ -26,7 +26,18 @@ Next.js 14 app for storing immutable forecast versions, ingesting daily market/m
 - **Daily**: `GET` or `POST /api/cron/daily` with header `Authorization: Bearer <CRON_SECRET>` (or `x-cron-secret`). Fetches BTC, SPY, VIX, DXY, FRED series and upserts into `daily_series`.
 - **Weekly**: `GET` or `POST /api/cron/weekly` with same auth. Computes most recent Friday week-ending, 6 indicators, scoring, alignment, and writes `weekly_snapshots` + `indicator_weekly`.
 
-**Vercel Cron**: `vercel.json` defines schedules (UTC). Daily runs at 23:20 Mon–Fri; weekly at 23:35 Friday. Set `CRON_SECRET` in Vercel Project → Settings → Environment Variables; Vercel sends `Authorization: Bearer <CRON_SECRET>` to cron routes.
+**Vercel Cron**: `vercel.json` defines schedules in UTC. Daily runs at 23:20 UTC Mon–Fri (e.g. 17:20 CST / 18:20 CDT Chicago); weekly at 23:35 UTC Friday. Set `CRON_SECRET` in Vercel Project → Settings → Environment Variables; Vercel sends `Authorization: Bearer <CRON_SECRET>` to cron routes.
+
+## Admin mode
+
+The app is public; the **Admin** link is hidden by default. To reveal it:
+
+- Visit **`/?admin=1`** once. The Admin link will appear in the nav and stay visible (stored in `localStorage` as `scenarioledger_admin=1`).
+- Admin endpoints remain protected by `ADMIN_SECRET`; this only controls link visibility.
+
+## Dashboard data health
+
+The Dashboard shows a **Data health** card with the last daily ingest time, per-series status (BTC, SPY, VIX, DXY, FRED series), and the latest weekly snapshot. **"Stale"** for a series is normal when markets are closed or FRED data is delayed—e.g. Stooq may return no new rows for SPY until the next print; the UI labels this as Stale instead of a hard failure.
 
 ## Scripts
 

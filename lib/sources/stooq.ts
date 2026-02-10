@@ -28,7 +28,7 @@ export async function fetchStooqDaily(
     const text = await res.text();
     const lines = text.trim().split("\n");
     if (lines.length < 2) {
-      return { data: [], error: "No rows" };
+      return { data: [], error: "No rows (market closed or delayed)." };
     }
     const header = lines[0].toLowerCase();
     const dateIdx = header.includes("date") ? header.split(",").indexOf("date") : 0;
@@ -54,7 +54,7 @@ export async function fetchStooqDaily(
       });
     }
     if (data.length === 0) {
-      return { data: [], error: "No parsed rows" };
+      return { data: [], error: "No rows (market closed or delayed)." };
     }
     return { data };
   } catch (e) {
@@ -105,7 +105,7 @@ export async function fetchStooqSpyLatest(): Promise<FetcherResult> {
     if (!res.ok) return { data: [], error: `HTTP ${res.status}` };
     const text = await res.text();
     const rows = parseStooqCsv(text);
-    if (rows.length === 0) return { data: [], error: "No rows" };
+    if (rows.length === 0) return { data: [], error: "No rows (market closed or delayed)." };
     const sorted = rows.sort((a, b) => b.dt.localeCompare(a.dt));
     return { data: [sorted[0]!] };
   } catch (e) {
