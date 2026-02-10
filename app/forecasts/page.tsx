@@ -1,15 +1,24 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabaseClient";
+import { ForecastAtAGlance } from "@/components/ForecastAtAGlance";
 import { ForecastSelector } from "@/components/forecast-selector";
+import type { ForecastConfig } from "@/lib/types";
 
 export const revalidate = 60;
 
 export default async function ForecastsPage() {
   const supabase = createClient();
+  const { data: activeForecast } = await supabase
+    .from("forecasts")
+    .select("id, version, name, config")
+    .eq("is_active", true)
+    .maybeSingle();
   const { data: forecasts } = await supabase
     .from("forecasts")
     .select("id, version, name, is_active, created_at")
     .order("version", { ascending: false });
+
+  const activeConfig = activeForecast?.config as ForecastConfig | null;
 
   return (
     <div className="space-y-6">
@@ -22,6 +31,16 @@ export default async function ForecastsPage() {
           Create new version
         </Link>
       </div>
+      {activeConfig && activeForecast && (
+        <section className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-4">
+          <h2 className="mb-3 text-lg font-medium">Active forecast preview</h2>
+          <ForecastAtAGlance
+            config={activeConfig}
+            forecastName={activeForecast.name}
+            version={activeForecast.version}
+          />
+        </section>
+      )}
       <ForecastSelector forecasts={forecasts ?? []} />
       <ul className="space-y-2">
         {(forecasts ?? []).map((f) => (

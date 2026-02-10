@@ -78,7 +78,24 @@ export default async function ForecastDetailPage({
           </ul>
         </section>
       )}
-      {config.timeline2026 && Array.isArray(config.timeline2026) && (
+      {config.timeline && Array.isArray(config.timeline) && config.timeline.length > 0 && (
+        <section className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-4">
+          <h2 className="mb-2 font-medium">Timeline</h2>
+          <div className="space-y-3">
+            {config.timeline.map((phase, i) => (
+              <div key={i}>
+                <h3 className="text-sm font-medium text-zinc-300">{phase.label}</h3>
+                <ul className="mt-1 list-disc pl-4 text-sm text-zinc-400">
+                  {(phase.bullets ?? []).map((b, j) => (
+                    <li key={j}>{b}</li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+      {config.timeline2026 && Array.isArray(config.timeline2026) && !config.timeline?.length && (
         <section className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-4">
           <h2 className="mb-2 font-medium">Timeline 2026</h2>
           <ul className="space-y-1 text-sm text-zinc-400">

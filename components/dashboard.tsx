@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabaseClient";
 import { createServiceRoleClient } from "@/lib/supabaseServer";
 import { getDataHealth } from "@/lib/dataHealth";
@@ -97,11 +98,19 @@ export async function Dashboard(props: { shareMode?: boolean; nerdMode?: boolean
               <p className="text-xs text-zinc-500">Educational speculation. Not investment advice.</p>
             </div>
           )}
-          {forecastVersion != null && (
-            <p className="text-xs text-zinc-500">
-              Forecast version used: v{forecastVersion}. Forecasts are immutable; updates ship as new versions.
-            </p>
-          )}
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            {forecastVersion != null && (
+              <p className="text-xs text-zinc-500">
+                Forecast version used: v{forecastVersion}. Forecasts are immutable; updates ship as new versions.
+              </p>
+            )}
+            <Link
+              href={shareMode ? "/predictions?share=1" : "/predictions"}
+              className="inline-flex rounded border border-zinc-600 bg-zinc-800 px-3 py-2 text-sm font-medium text-zinc-200 hover:bg-zinc-700 hover:text-white"
+            >
+              View Published Forecast
+            </Link>
+          </div>
           <ScenarioCard
             activeScenario={snapshot.active_scenario}
             confidence={snapshot.confidence}

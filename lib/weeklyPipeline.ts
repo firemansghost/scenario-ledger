@@ -53,14 +53,15 @@ export async function runWeeklyPipeline(weekEnding?: string): Promise<WeeklyPipe
   }
   const data_completeness = indicatorOutputs.filter((r) => r.value != null).length / 6;
   const vixStress = indicatorOutputs.find((r) => r.indicator_key === "vix_regime")?.state === "bearish";
+  const config = forecastRow.config as ForecastConfig;
   const scoringResult = computeScoring({
     indicatorRows,
     definitions,
     dataCompleteness: data_completeness,
     vixStress,
+    scoring: config.scoring,
   });
 
-  const config = forecastRow.config as ForecastConfig;
   const { alignment, spx_factor, spx_equiv } = computeAlignment({
     config,
     weekEnding: we,

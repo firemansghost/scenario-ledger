@@ -1,7 +1,10 @@
-import { softmax } from "./softmax";
+import { softmaxWithTemperature } from "./softmax";
 import type { IndicatorState, ScenarioKey, TopContributor } from "./types";
 
 const SCENARIOS: ScenarioKey[] = ["bull", "base", "bear"];
+
+const DEFAULT_PRIORS: Record<ScenarioKey, number> = { bull: 0.2, base: 0.6, bear: 0.2 };
+const DEFAULT_TEMPERATURE = 1.4;
 
 interface IndicatorRow {
   indicator_key: string;
@@ -12,11 +15,17 @@ interface WeightRow {
   weights: Record<IndicatorState, Partial<Record<ScenarioKey, number>>>;
 }
 
+export interface ScoringConfig {
+  priors?: Partial<Record<ScenarioKey, number>>;
+  temperature?: number;
+}
+
 export interface ScoringInput {
   indicatorRows: IndicatorRow[];
   definitions: Record<string, WeightRow>;
   dataCompleteness: number;
   vixStress?: boolean;
+  scoring?: ScoringConfig;
 }
 
 export interface ScoringResult {
@@ -28,8 +37,15 @@ export interface ScoringResult {
 }
 
 export function computeScoring(input: ScoringInput): ScoringResult {
-  const { indicatorRows, definitions, dataCompleteness, vixStress } = input;
+  const { indicatorRows, definitions, dataCompleteness, vixStress, scoring } = input;
   const scores: Record<ScenarioKey, number> = { bull: 0, base: 0, bear: 0 };
+
+  const priors = { ...DEFAULT_PRIORS, ...scoring?.priors };
+  const temperature = scoring?.temperature ?? DEFAULT_TEMPERATURE;
+  for (const s of SCENARIOS) {
+    const p = Math.max(priors[s] ?? 0, 1e-9);
+    scores[s] = Math.log(p);
+  }
 
   for (const row of indicatorRows) {
     const def = definitions[row.indicator_key];
@@ -42,8 +58,8 @@ export function computeScoring(input: ScoringInput): ScoringResult {
     }
   }
 
-  const scenario_probs = softmax(scores) as Record<ScenarioKey, number>;
-  const sorted = SCENARIOS.sort((a, b) => (scenario_probs[b] ?? 0) - (scenario_probs[a] ?? 0));
+  const scenario_probs = softmaxWithTemperature(scores, temperature) as Record<ScenarioKey, number>;
+  const sorted = [...SCENARIOS].sort((a, b) => (scenario_probs[b] ?? 0) - (scenario_probs[a] ?? 0));
   const active_scenario = sorted[0] ?? "base";
   const runnerUp = sorted[1] ?? "base";
   const lead = (scenario_probs[active_scenario] ?? 0) - (scenario_probs[runnerUp] ?? 0);

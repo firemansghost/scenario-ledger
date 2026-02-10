@@ -29,15 +29,23 @@ export interface ScenarioConfig {
   invalidations: string[];
 }
 
+export interface ScoringConfig {
+  priors?: Partial<Record<ScenarioKey, number>>;
+  temperature?: number;
+}
+
 export interface ForecastConfig {
   meta: ForecastMeta;
   timeline2026?: unknown[];
+  /** Phases with label + bullets (e.g. 2026, 2027, 2028+). */
+  timeline?: { label: string; bullets: string[] }[];
   rangeInterpretation?: unknown;
   scenarios: {
     base: ScenarioConfig;
     bull: ScenarioConfig;
     bear: ScenarioConfig;
   };
+  scoring?: ScoringConfig;
   athMeta?: unknown;
   athWindows?: unknown[];
 }

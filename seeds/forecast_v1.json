@@ -10,6 +10,15 @@
     "spyApproxFormula": "spy_approx = spx_points * spxToSpyFactor",
     "equityProxyNote": "Forecast S&P ranges are expressed as SPX points for readability; alignment uses SPY vs spyRangeApprox and displays SPX-equivalent (approx)."
   },
+  "scoring": {
+    "priors": { "bull": 0.2, "base": 0.6, "bear": 0.2 },
+    "temperature": 1.4
+  },
+  "timeline": [
+    { "label": "2026", "bullets": ["Feb–Mar: Relief rally / lower high", "Apr–May: Retest / sweep risk", "Jun–Aug: Apathy / low vol grind", "Sep–Oct: Final exam window", "Nov–Dec: Potential pivot"] },
+    { "label": "2027", "bullets": ["H1: Expansion or consolidation", "H2: Pre-halving anticipation"] },
+    { "label": "2028+", "bullets": ["Expansion / pre-halving anticipation", "Risk: policy + liquidity regime shift"] }
+  ],
   "timeline2026": [
     { "label": "Feb–Mar", "theme": "Relief rally / lower high", "btc": "bounce + chop", "equities": "stabilizes" },
     { "label": "Apr–May", "theme": "Retest / sweep risk", "btc": "retest lows", "equities": "drawdown window" },

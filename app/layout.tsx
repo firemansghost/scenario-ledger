@@ -12,9 +12,11 @@ function NavFallback() {
   return (
     <nav className="mt-4 flex gap-4 text-sm">
       <a href="/" className="text-muted-foreground hover:text-foreground">Dashboard</a>
+      <a href="/predictions" className="text-muted-foreground hover:text-foreground">Predictions</a>
       <a href="/evidence" className="text-muted-foreground hover:text-foreground">Evidence</a>
       <a href="/alignment" className="text-muted-foreground hover:text-foreground">Alignment</a>
       <a href="/forecasts" className="text-muted-foreground hover:text-foreground">Forecasts</a>
+      <a href="/learn" className="text-muted-foreground hover:text-foreground">Learn</a>
     </nav>
   );
 }

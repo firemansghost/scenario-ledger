@@ -7,7 +7,7 @@
     "thresholds": { "up": 0.05, "down": -0.05 },
     "weights": {
       "bullish": { "bull": 1, "base": 0, "bear": -1 },
-      "neutral": { "bull": 0, "base": 1, "bear": 0 },
+      "neutral": { "bull": 0, "base": 0, "bear": 0 },
       "bearish": { "bull": -1, "base": 0, "bear": 1 }
     },
     "enabled": true
@@ -20,7 +20,7 @@
     "thresholds": { "up": 0.5, "down": -0.5 },
     "weights": {
       "bullish": { "bull": 0, "base": 0, "bear": -1 },
-      "neutral": { "bull": 0, "base": 1, "bear": 0 },
+      "neutral": { "bull": 0, "base": 0, "bear": 0 },
       "bearish": { "bull": -1, "base": 0, "bear": 1 }
     },
     "enabled": true
@@ -33,7 +33,7 @@
     "thresholds": { "widen": 0.1, "tighten": -0.1 },
     "weights": {
       "bullish": { "bull": 1, "base": 0, "bear": -1 },
-      "neutral": { "bull": 0, "base": 1, "bear": 0 },
+      "neutral": { "bull": 0, "base": 0, "bear": 0 },
       "bearish": { "bull": -1, "base": 0, "bear": 1 }
     },
     "enabled": true
@@ -46,7 +46,7 @@
     "thresholds": { "stressLevel": 25, "calmLevel": 15, "deltaUp": 3, "deltaDown": -3 },
     "weights": {
       "bullish": { "bull": 1, "base": 0, "bear": -1 },
-      "neutral": { "bull": 0, "base": 1, "bear": 0 },
+      "neutral": { "bull": 0, "base": 0, "bear": 0 },
       "bearish": { "bull": -1, "base": 0, "bear": 1 }
     },
     "enabled": true
@@ -59,7 +59,7 @@
     "thresholds": {},
     "weights": {
       "bullish": { "bull": 1, "base": 0, "bear": -1 },
-      "neutral": { "bull": 0, "base": 1, "bear": 0 },
+      "neutral": { "bull": 0, "base": 0, "bear": 0 },
       "bearish": { "bull": -1, "base": 0, "bear": 1 }
     },
     "enabled": true
@@ -72,7 +72,7 @@
     "thresholds": {},
     "weights": {
       "bullish": { "bull": 1, "base": 0, "bear": -1 },
-      "neutral": { "bull": 0, "base": 1, "bear": 0 },
+      "neutral": { "bull": 0, "base": 0, "bear": 0 },
       "bearish": { "bull": -1, "base": 0, "bear": 1 }
     },
     "enabled": true

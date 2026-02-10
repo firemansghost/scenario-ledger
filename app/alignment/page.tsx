@@ -34,28 +34,53 @@ export default async function AlignmentPage() {
             <h2 className="mb-2 text-lg font-medium">Latest week</h2>
             {(() => {
               const latest = snapshots[snapshots.length - 1];
-              const align = latest?.alignment as Record<string, { btc?: { inBand: boolean }; spy?: { inBand: boolean }; periodLabel?: string }> | undefined;
+              const align = latest?.alignment as Record<string, {
+                btc?: { inBand: boolean; driftPct?: number };
+                spy?: { inBand: boolean; driftPct?: number };
+                periodLabel?: string;
+              }> | undefined;
               return (
-                <dl className="grid gap-2 text-sm">
-                  {align &&
-                    ["bull", "base", "bear"].map((sc) => (
-                      <div key={sc}>
-                        <dt className="capitalize text-zinc-400">{sc}</dt>
-                        <dd>
-                          BTC {align[sc]?.btc?.inBand ? "✓ in band" : "✗ out"} · SPY{" "}
-                          {align[sc]?.spy?.inBand ? "✓ in band" : "✗ out"}
-                          {align[sc]?.periodLabel && ` (${align[sc].periodLabel})`}
-                        </dd>
-                      </div>
-                    ))}
-                  <div>
-                    <dt className="text-zinc-400">SPX equiv / SPY / factor</dt>
-                    <dd className="font-mono">
-                      {latest?.spx_equiv != null ? Number(latest.spx_equiv).toFixed(2) : "—"} /{" "}
-                      {latest?.spy_close != null ? Number(latest.spy_close).toFixed(2) : "—"} / {factor}
-                    </dd>
+                <>
+                  <div className="mb-3 flex flex-wrap gap-2">
+                    {align &&
+                      (["bull", "base", "bear"] as const).map((sc) => {
+                        const a = align[sc];
+                        const btcIn = a?.btc?.inBand ?? false;
+                        const spyIn = a?.spy?.inBand ?? false;
+                        const btcDrift = a?.btc?.driftPct;
+                        const spyDrift = a?.spy?.driftPct;
+                        return (
+                          <div key={sc} className="rounded border border-zinc-700 bg-zinc-800/50 px-3 py-2">
+                            <span className="capitalize font-medium text-zinc-300">{sc}</span>
+                            <span className="ml-2 text-zinc-500">
+                              BTC: {btcIn ? <span className="text-emerald-400">Inside</span> : <span className="text-amber-400">Outside</span>}
+                              {btcDrift != null && !btcIn && ` (${btcDrift.toFixed(1)}% drift)`}
+                            </span>
+                            <span className="ml-2 text-zinc-500">
+                              SPY: {spyIn ? <span className="text-emerald-400">Inside</span> : <span className="text-amber-400">Outside</span>}
+                              {spyDrift != null && !spyIn && ` (${spyDrift.toFixed(1)}% drift)`}
+                            </span>
+                            {a?.periodLabel && <span className="ml-1 text-zinc-500">({a.periodLabel})</span>}
+                          </div>
+                        );
+                      })}
                   </div>
-                </dl>
+                  <dl className="grid gap-2 text-sm">
+                    <div>
+                      <dt className="text-zinc-400">SPX equiv / SPY / factor</dt>
+                      <dd className="font-mono">
+                        {latest?.spx_equiv != null ? Number(latest.spx_equiv).toFixed(2) : "—"} /{" "}
+                        {latest?.spy_close != null ? Number(latest.spy_close).toFixed(2) : "—"} / {factor}
+                      </dd>
+                    </div>
+                    {latest?.btc_close != null && (
+                      <div>
+                        <dt className="text-zinc-400">BTC close</dt>
+                        <dd className="font-mono">${Number(latest.btc_close).toLocaleString()}</dd>
+                      </div>
+                    )}
+                  </dl>
+                </>
               );
             })()}
           </section>
