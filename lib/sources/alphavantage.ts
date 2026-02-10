@@ -4,16 +4,16 @@ import type { FetcherResult } from "./types";
 const TIME_SERIES_KEY = "Time Series (Daily)";
 
 /**
- * Alpha Vantage TIME_SERIES_DAILY_ADJUSTED: returns most recent trading day close.
+ * Alpha Vantage TIME_SERIES_DAILY (non-premium). Returns most recent trading day close.
  * Symbol is normalized to uppercase. Uses 4. close. Store as series_key: spy, source: alphavantage.
  * Throws exact API message for "Error Message", "Information", or "Note"; otherwise "Unexpected AV response keys: ...".
  */
-export async function fetchAlphaVantageDailyAdjusted(symbol: string): Promise<FetcherResult> {
+export async function fetchAlphaVantageDaily(symbol: string): Promise<FetcherResult> {
   const apiKey = process.env.ALPHAVANTAGE_API_KEY;
   if (!apiKey) return { data: [], error: "Missing ALPHAVANTAGE_API_KEY" };
 
   const normalized = symbol.toUpperCase();
-  const url = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=${encodeURIComponent(normalized)}&apikey=${apiKey}`;
+  const url = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${encodeURIComponent(normalized)}&apikey=${apiKey}`;
   const res = await fetch(url);
   const json = (await res.json()) as Record<string, unknown>;
 
@@ -52,9 +52,9 @@ export async function fetchAlphaVantageDailyAdjusted(symbol: string): Promise<Fe
 }
 
 /**
- * Fetch full daily adjusted series (for backfill). Returns up to last N trading days.
+ * Fetch full daily series (TIME_SERIES_DAILY) for backfill fallback. Returns up to last N trading days.
  */
-export async function fetchAlphaVantageDailyAdjustedRange(
+export async function fetchAlphaVantageDailyRange(
   symbol: string,
   lastNDays: number
 ): Promise<DailyDataPoint[]> {
@@ -62,7 +62,7 @@ export async function fetchAlphaVantageDailyAdjustedRange(
   if (!apiKey) return [];
 
   const normalized = symbol.toUpperCase();
-  const url = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=${encodeURIComponent(normalized)}&apikey=${apiKey}`;
+  const url = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${encodeURIComponent(normalized)}&apikey=${apiKey}`;
   const res = await fetch(url);
   const json = (await res.json()) as Record<string, unknown>;
 

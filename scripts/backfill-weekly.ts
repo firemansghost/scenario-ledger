@@ -3,7 +3,7 @@
  * Usage: tsx scripts/backfill-weekly.ts [week_ending_start] [week_ending_end]
  * If no args, backfills last 4 weeks.
  */
-import "dotenv/config";
+import "./_env";
 import { createClient } from "@supabase/supabase-js";
 import { getMostRecentFriday, previousWeekEnding } from "../lib/dates";
 import { getDailyValue } from "../lib/overrides";

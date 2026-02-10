@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { createServiceRoleClient } from "@/lib/supabaseServer";
 import { getTodayChicago } from "@/lib/dates";
 import { fetchBtcDaily } from "@/lib/sources/coingecko";
-import { fetchAlphaVantageDailyAdjusted } from "@/lib/sources/alphavantage";
+import { fetchStooqSpyLatest } from "@/lib/sources/stooq";
+import { fetchAlphaVantageDaily } from "@/lib/sources/alphavantage";
 import { fetchFredLatestForSeries } from "@/lib/sources/fred";
 import type { DailyDataPoint } from "@/lib/types";
 
@@ -54,7 +55,31 @@ export async function POST(req: Request) {
   }
 
   const btc = await run("btc_usd", "coingecko", () => fetchBtcDaily(target));
-  const spy = await run("spy", "alphavantage", () => fetchAlphaVantageDailyAdjusted("SPY"));
+  let spy: DailyDataPoint[] = [];
+  const stooqSpy = await fetchStooqSpyLatest();
+  if (stooqSpy.error) {
+    await supabase.from("data_fetch_logs").insert({
+      run_id: runId,
+      job: "daily",
+      source: "stooq",
+      series_key: "spy",
+      status: "failure",
+      message: stooqSpy.error,
+      meta: { target, fallback: "alphavantage" },
+    });
+    spy = await run("spy", "alphavantage", () => fetchAlphaVantageDaily("SPY"));
+  } else {
+    spy = stooqSpy.data;
+    await supabase.from("data_fetch_logs").insert({
+      run_id: runId,
+      job: "daily",
+      source: "stooq",
+      series_key: "spy",
+      status: "success",
+      message: spy.length ? `${spy.length} row(s)` : "no data",
+      meta: { target, count: spy.length },
+    });
+  }
   const vix = await run("vix", "fred", () => fetchFredLatestForSeries("vix", target));
   const dxy = await run("dxy", "fred", () => fetchFredLatestForSeries("dxy", target));
   const dfii = await run("fred_dfii10", "fred", () => fetchFredLatestForSeries("fred_dfii10", target));

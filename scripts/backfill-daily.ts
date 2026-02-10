@@ -4,18 +4,20 @@
  *
  * Usage: npm run backfill:daily
  *
- * - SPY: Alpha Vantage TIME_SERIES_DAILY_ADJUSTED, insert last 60 trading days
+ * - SPY: Stooq range (last ~90 calendar days, up to 70 trading rows); fallback Alpha Vantage TIME_SERIES_DAILY
  * - BTC: CoinGecko market_chart/range, derive daily closes, insert last 60 days
  * - FRED (fred_dfii10, fred_hyoas, vix, dxy): observations for last 90 days
  */
-import "dotenv/config";
+import "./_env";
 import { createClient } from "@supabase/supabase-js";
 import { subDays } from "date-fns";
 import { fetchBtcDailyRange } from "../lib/sources/coingecko";
-import { fetchAlphaVantageDailyAdjustedRange } from "../lib/sources/alphavantage";
+import { fetchStooqSpyRange } from "../lib/sources/stooq";
+import { fetchAlphaVantageDailyRange } from "../lib/sources/alphavantage";
 import { fetchFredRange, FRED_SERIES } from "../lib/sources/fred";
 
-const SPY_DAYS = 60;
+const SPY_CALENDAR_DAYS = 90;
+const SPY_MAX_ROWS = 70;
 const BTC_DAYS = 60;
 const FRED_DAYS = 90;
 
@@ -36,11 +38,18 @@ async function main() {
   const fredStart = formatISO(subDays(new Date(), FRED_DAYS));
 
   console.log("Backfilling daily_series...");
-  console.log("  SPY: last", SPY_DAYS, "trading days (Alpha Vantage)");
   let count = 0;
 
   try {
-    const spyPoints = await fetchAlphaVantageDailyAdjustedRange("SPY", SPY_DAYS);
+    let spyPoints: { series_key: string; source: string; dt: string; value: number }[];
+    try {
+      spyPoints = await fetchStooqSpyRange(SPY_CALENDAR_DAYS, SPY_MAX_ROWS);
+      console.log("  SPY: Stooq range fetched, inserting", spyPoints.length, "rows");
+    } catch (e) {
+      console.warn("  SPY Stooq failed:", e instanceof Error ? e.message : e, "- trying Alpha Vantage fallback");
+      spyPoints = await fetchAlphaVantageDailyRange("SPY", SPY_MAX_ROWS);
+      console.log("  SPY: Alpha Vantage fallback, inserting", spyPoints.length, "rows");
+    }
     for (const p of spyPoints) {
       await supabase.from("daily_series").upsert(
         { series_key: p.series_key, source: p.source, dt: p.dt, value: p.value },
