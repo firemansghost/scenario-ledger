@@ -1,0 +1,80 @@
+[
+  {
+    "key": "real_yields_direction",
+    "name": "Real Yields Direction",
+    "description": "WoW delta of 10Y real yield (FRED DFII10)",
+    "calc": { "series": "fred_dfii10", "deltaType": "absolute" },
+    "thresholds": { "up": 0.05, "down": -0.05 },
+    "weights": {
+      "bullish": { "bull": 1, "base": 0, "bear": -1 },
+      "neutral": { "bull": 0, "base": 1, "bear": 0 },
+      "bearish": { "bull": -1, "base": 0, "bear": 1 }
+    },
+    "enabled": true
+  },
+  {
+    "key": "dxy_direction",
+    "name": "USD Index (proxy)",
+    "description": "WoW % change; DTWEXBGS used as proxy for DXY",
+    "calc": { "series": "dxy", "deltaType": "percent" },
+    "thresholds": { "up": 0.5, "down": -0.5 },
+    "weights": {
+      "bullish": { "bull": 0, "base": 0, "bear": -1 },
+      "neutral": { "bull": 0, "base": 1, "bear": 0 },
+      "bearish": { "bull": -1, "base": 0, "bear": 1 }
+    },
+    "enabled": true
+  },
+  {
+    "key": "credit_spreads_direction",
+    "name": "Credit Spreads Direction",
+    "description": "WoW delta of high yield OAS (FRED)",
+    "calc": { "series": "fred_hyoas", "deltaType": "absolute" },
+    "thresholds": { "widen": 0.1, "tighten": -0.1 },
+    "weights": {
+      "bullish": { "bull": 1, "base": 0, "bear": -1 },
+      "neutral": { "bull": 0, "base": 1, "bear": 0 },
+      "bearish": { "bull": -1, "base": 0, "bear": 1 }
+    },
+    "enabled": true
+  },
+  {
+    "key": "vix_regime",
+    "name": "VIX Regime",
+    "description": "VIX level + WoW delta: calmer/mixed/stress",
+    "calc": { "series": "vix", "deltaType": "absolute", "levelKey": "vix" },
+    "thresholds": { "stressLevel": 25, "calmLevel": 15, "deltaUp": 3, "deltaDown": -3 },
+    "weights": {
+      "bullish": { "bull": 1, "base": 0, "bear": -1 },
+      "neutral": { "bull": 0, "base": 1, "bear": 0 },
+      "bearish": { "bull": -1, "base": 0, "bear": 1 }
+    },
+    "enabled": true
+  },
+  {
+    "key": "btc_trend_structure",
+    "name": "BTC Trend Structure",
+    "description": "Last 8 weekly closes: higher-highs / range / lower-lows",
+    "calc": { "series": "btc_usd", "lookbackWeeks": 8 },
+    "thresholds": {},
+    "weights": {
+      "bullish": { "bull": 1, "base": 0, "bear": -1 },
+      "neutral": { "bull": 0, "base": 1, "bear": 0 },
+      "bearish": { "bull": -1, "base": 0, "bear": 1 }
+    },
+    "enabled": true
+  },
+  {
+    "key": "spy_trend_structure",
+    "name": "SPY Trend Structure",
+    "description": "Last 8 weekly closes: higher-highs / range / lower-lows",
+    "calc": { "series": "spy", "lookbackWeeks": 8 },
+    "thresholds": {},
+    "weights": {
+      "bullish": { "bull": 1, "base": 0, "bear": -1 },
+      "neutral": { "bull": 0, "base": 1, "bear": 0 },
+      "bearish": { "bull": -1, "base": 0, "bear": 1 }
+    },
+    "enabled": true
+  }
+]

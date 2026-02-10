@@ -1,0 +1,71 @@
+{
+  "meta": {
+    "name": "ScenarioLedger ATH Windows v1",
+    "asOf": "2026-02-08",
+    "notes": [
+      "Conditional windows, not guarantees.",
+      "Ranges are approximate to avoid false precision."
+    ],
+    "priorATHContext": {
+      "date": "2025-10-05",
+      "priceUsdApprox": 126000
+    }
+  },
+  "windows": [
+    {
+      "key": "window_a",
+      "label": "Window A",
+      "confidence": "low",
+      "displayRange": "Late 2026 → H2 2027",
+      "approxStart": "2026-10-01",
+      "approxEnd": "2027-12-31",
+      "cycleLogic": "Requires this drawdown to be a mid-cycle correction rather than a full cycle reset.",
+      "macroNeeded": [
+        "Real yields fall",
+        "Credit stays calm",
+        "Equities stabilize",
+        "ETF demand remains steady"
+      ],
+      "whatBreaksIt": [
+        "Recession",
+        "Credit widening",
+        "Major crypto deleveraging event"
+      ]
+    },
+    {
+      "key": "window_b",
+      "label": "Window B",
+      "confidence": "medium",
+      "displayRange": "H2 2027 → H1 2028",
+      "approxStart": "2027-07-01",
+      "approxEnd": "2028-06-30",
+      "cycleLogic": "Rebuild + expansion phase after a 2026 low window; new highs typically require months of base-building.",
+      "macroNeeded": [
+        "Neutral-to-easier liquidity conditions",
+        "Risk-on regime"
+      ],
+      "whatBreaksIt": [
+        "Sticky inflation keeping real yields high",
+        "Equity bear persists"
+      ]
+    },
+    {
+      "key": "window_c",
+      "label": "Window C",
+      "confidence": "medium-high",
+      "displayRange": "Post-2028 halving → 2028–2029",
+      "approxStart": "2028-04-01",
+      "approxEnd": "2029-12-31",
+      "cycleLogic": "Post-halving expansions have historically supported new nominal highs (timing varies).",
+      "macroNeeded": [
+        "Globally easier financial conditions",
+        "Improving risk appetite"
+      ],
+      "whatBreaksIt": [
+        "Structural demand shock (regulation/flows)",
+        "Macro liquidity crunch"
+      ]
+    }
+  ],
+  "disclaimer": "Educational speculation • Not financial advice"
+}
