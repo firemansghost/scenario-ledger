@@ -190,7 +190,10 @@ export async function fetchStooqDateRangeForTicker(
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const text = await res.text();
   const rows = parseStooqCsvWithKey(text, seriesKey);
-  if (rows.length === 0) return [];
+  if (rows.length === 0) {
+    console.warn(`stooq: 0 rows for ${ticker} ${d1YYYYMMDD}..${d2YYYYMMDD} (url: ${url})`);
+    return [];
+  }
   const sorted = rows.sort((a, b) => a.dt.localeCompare(b.dt));
   return sorted.slice(-maxRows);
 }
