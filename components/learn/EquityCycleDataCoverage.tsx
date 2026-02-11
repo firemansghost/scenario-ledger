@@ -27,6 +27,7 @@ export function EquityCycleDataCoverage({ meta }: EquityCycleDataCoverageProps) 
         <li>Returns shown: price return (no dividends)</li>
         <li>Sample: ~{meta.years_covered} years (~{cyclesApprox} presidential cycles)</li>
       </ul>
+      <p className="text-xs text-zinc-500">Stats exclude incomplete calendar years.</p>
       {thinCoverage && (
         <p className="text-amber-400/90 text-sm">
           Coverage is thin; stats are low-confidence.

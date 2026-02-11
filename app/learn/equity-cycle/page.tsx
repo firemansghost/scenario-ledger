@@ -41,9 +41,11 @@ export default async function EquityCyclePage() {
     <div className="space-y-6">
       <MissionBanner />
       <Link href="/learn" className="text-sm text-zinc-500 hover:text-white">← Start here</Link>
-      <h1 className="text-xl font-semibold">Equity 4-year cycle (presidential cycle)</h1>
+      <h1 className="text-xl font-semibold">
+        Equity 4-year cycle (presidential cycle on {seriesUsed === "spx" ? "SPX" : "SPY"})
+      </h1>
       <p className="text-sm text-zinc-400">
-        The 4-year cycle in equities often refers to the presidential cycle: different average returns and volatility by year 1–4. Stats below use S&P 500 Index (SPX) when available, otherwise SPY ETF—both price return only (no dividends).
+        The 4-year cycle in equities often refers to the presidential cycle: different average returns and volatility by year 1–4. Returns shown: price return (no dividends).
       </p>
       {data ? (
         <>

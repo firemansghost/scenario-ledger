@@ -59,6 +59,12 @@ export interface BuildRollupsResult {
 
 type EquityRow = { dt: string; value: number };
 
+/** Year is complete if we have data through Dec 15 (year-end proxy). Excludes current year. */
+function isCompleteYear(year: number, lastDt: string, thisYear: number): boolean {
+  if (year >= thisYear) return false;
+  return lastDt >= `${year}-12-15`;
+}
+
 function buildEquityRollupFromRows(
   rows: EquityRow[],
   seriesKeyUsed: "spx" | "spy"
@@ -71,8 +77,18 @@ function buildEquityRollupFromRows(
     coverage: { startDate?: string; endDate?: string; years: number };
     note: string;
   };
-  meta: { series_key_used: string; min_dt: string; max_dt: string; years_covered: number; rowCount: number };
+  meta: {
+    series_key_used: string;
+    min_dt: string;
+    max_dt: string;
+    years_covered: number;
+    rowCount: number;
+    complete_years_used?: number[];
+    excluded_years?: number[];
+    as_of_complete_year?: number;
+  };
 } {
+  const thisYear = new Date().getFullYear();
   const byYear = new Map<number, { first: EquityRow; last: EquityRow; prices: number[] }>();
   for (const r of rows) {
     const y = parseInt(r.dt.slice(0, 4), 10);
@@ -83,11 +99,16 @@ function buildEquityRollupFromRows(
     cell.prices.push(r.value);
   }
   const minYear = seriesKeyUsed === "spy" ? 1994 : Math.min(...byYear.keys());
-  const years = [...byYear.keys()].filter((y) => y >= minYear).sort((a, b) => a - b);
+  const allYears = [...byYear.keys()].filter((y) => y >= minYear).sort((a, b) => a - b);
+  const completeYears = allYears.filter(
+    (y) => isCompleteYear(y, byYear.get(y)!.last.dt, thisYear)
+  );
+  const excludedYears = allYears.filter((y) => !completeYears.includes(y));
+
   const annualReturns: { year: number; cycleYear: number; returnPct: number }[] = [];
-  for (let i = 1; i < years.length; i++) {
-    const y = years[i]!;
-    const prevY = years[i - 1]!;
+  for (let i = 1; i < completeYears.length; i++) {
+    const y = completeYears[i]!;
+    const prevY = completeYears[i - 1]!;
     const prevLast = byYear.get(prevY)?.last?.value;
     const currLast = byYear.get(y)?.last?.value;
     if (prevLast != null && currLast != null && prevLast > 0) {
@@ -117,6 +138,7 @@ function buildEquityRollupFromRows(
   const midtermDrawdowns: number[] = [];
   for (const r of midtermYears) {
     const cell = byYear.get(r.year);
+    if (!completeYears.includes(r.year)) continue;
     if (cell?.prices.length) {
       const max = Math.max(...cell.prices);
       const min = Math.min(...cell.prices);
@@ -146,15 +168,18 @@ function buildEquityRollupFromRows(
         cycleYear: r.cycleYear,
         returnPct: Math.round(r.returnPct * 100) / 100,
       })),
-      coverage: { startDate: minDt, endDate: maxDt, years: years.length },
+      coverage: { startDate: minDt, endDate: maxDt, years: completeYears.length },
       note,
     },
     meta: {
       series_key_used: seriesKeyUsed,
       min_dt: minDt,
       max_dt: maxDt,
-      years_covered: years.length,
+      years_covered: completeYears.length,
       rowCount: rows.length,
+      complete_years_used: completeYears,
+      excluded_years: excludedYears,
+      as_of_complete_year: completeYears.length > 0 ? completeYears[completeYears.length - 1] : undefined,
     },
   };
 }

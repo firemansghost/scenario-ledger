@@ -26,7 +26,7 @@ export default async function AlignmentPage() {
       <MissionBanner />
       <h1 className="text-xl font-semibold">Alignment</h1>
       <p className="text-sm text-zinc-400">
-        Alignment uses SPY price. Drift = % outside forecast band. BTC and SPY vs scenario bands by week.
+        Alignment uses SPY price vs forecast bands. Drift = % outside band. BTC and SPY by week.
       </p>
       {snapshots && snapshots.length > 0 ? (
         <>

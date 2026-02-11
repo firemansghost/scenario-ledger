@@ -30,7 +30,7 @@ function PeriodBlock({ p }: { p: PeriodBand }) {
 export function ForecastAtAGlance({ config, forecastName, version }: ForecastAtAGlanceProps) {
   const [tab, setTab] = useState<ScenarioKey>("base");
   const scenario = config.scenarios?.[tab];
-  const timeline = config.timeline;
+  const timeline = config.timeline ?? config.timeline_by_year;
   const athWindows = config.athWindows as { key?: string; label?: string; displayRange?: string }[] | undefined;
 
   return (
@@ -70,12 +70,11 @@ export function ForecastAtAGlance({ config, forecastName, version }: ForecastAtA
           )}
           {(timeline?.length ?? 0) > 0 && (
             <section>
-              <h3 className="mb-2 text-sm font-medium text-zinc-400">Timeline</h3>
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {(timeline ?? []).map((phase, i) => (
                   <div key={i}>
-                    <span className="font-medium text-zinc-300">{phase.label}</span>
-                    <ul className="mt-0.5 list-disc pl-4 text-sm text-zinc-400">
+                    <h3 className="mb-1 text-sm font-medium text-zinc-400">Timeline {phase.label}</h3>
+                    <ul className="list-disc pl-4 text-sm text-zinc-400">
                       {phase.bullets.map((b, j) => <li key={j}>{b}</li>)}
                     </ul>
                   </div>

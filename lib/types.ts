@@ -37,8 +37,10 @@ export interface ScoringConfig {
 export interface ForecastConfig {
   meta: ForecastMeta;
   timeline2026?: unknown[];
-  /** Phases with label + bullets (e.g. 2026, 2027, 2028+). */
+  /** Phases with label + bullets (e.g. 2026, 2027, 2028+). Rendered as "Timeline {label}" sections. */
   timeline?: { label: string; bullets: string[] }[];
+  /** Alias for timeline; same structure. */
+  timeline_by_year?: { label: string; bullets: string[] }[];
   rangeInterpretation?: unknown;
   scenarios: {
     base: ScenarioConfig;
