@@ -1,9 +1,10 @@
-import Link from "next/link";
 import { createClient } from "@/lib/supabaseClient";
 import { createServiceRoleClient } from "@/lib/supabaseServer";
 import { getDataHealth } from "@/lib/dataHealth";
 import { getEvidenceForWeek } from "@/lib/getEvidenceForWeek";
 import { CopySummaryButton } from "@/components/CopySummaryButton";
+import { CurrentReadSummary } from "@/components/CurrentReadSummary";
+import { DashboardThisWeekMini } from "@/components/DashboardThisWeekMini";
 import { DataHealthCard } from "@/components/DataHealthCard";
 import { DataStatusBadge } from "@/components/data-status-badge";
 import { HowToRead } from "@/components/HowToRead";
@@ -63,7 +64,7 @@ export async function Dashboard(props: { shareMode?: boolean; nerdMode?: boolean
   ]);
 
   const { data: forecast } = snapshot
-    ? await supabase.from("forecasts").select("config, version").eq("id", snapshot.forecast_id).single()
+    ? await supabase.from("forecasts").select("config, version, created_at").eq("id", snapshot.forecast_id).single()
     : { data: null };
 
   const spxFactor = (forecast?.config as { meta?: { spxToSpyFactor?: number } })?.meta?.spxToSpyFactor ?? 0.1;
@@ -85,11 +86,29 @@ export async function Dashboard(props: { shareMode?: boolean; nerdMode?: boolean
         })
       : "";
 
+  type ConfigShape = { scenarios?: Record<string, { label?: string; periods?: Array<{ btcRangeUsd?: { low: number; high: number }; spxRange?: { low: number; high: number } }> }> };
+  const config = forecast?.config as ConfigShape | null;
+  const activeScenarioKey = snapshot?.active_scenario as "bull" | "base" | "bear" | undefined;
+  const scenario = activeScenarioKey && config?.scenarios?.[activeScenarioKey];
+  const activeScenarioLabel = scenario?.label ?? null;
+  const firstPeriod = scenario?.periods?.[0] ?? null;
+  const align = (snapshot?.alignment as Record<string, { btc?: { inBand: boolean; driftPct?: number }; spy?: { inBand: boolean; driftPct?: number } } | undefined>) ?? {};
+  const activeAlign = activeScenarioKey ? align[activeScenarioKey] : null;
+
   return (
     <div className="space-y-6">
       <MissionBanner />
+      {snapshot && (
+        <CurrentReadSummary
+          forecastVersion={forecastVersion}
+          forecastCreatedAt={forecast?.created_at ?? null}
+          activeScenarioKey={activeScenarioKey}
+          activeScenarioLabel={activeScenarioLabel}
+          firstPeriod={firstPeriod ? { btcRangeUsd: firstPeriod.btcRangeUsd!, spxRange: firstPeriod.spxRange! } : null}
+          shareMode={shareMode}
+        />
+      )}
       <HowToRead defaultExpanded={shareMode} />
-      {nerdMode && !shareMode && <DataHealthCard data={dataHealth} />}
       {snapshot ? (
         <>
           {shareMode && (
@@ -98,19 +117,6 @@ export async function Dashboard(props: { shareMode?: boolean; nerdMode?: boolean
               <p className="text-xs text-zinc-500">Educational speculation. Not investment advice.</p>
             </div>
           )}
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            {forecastVersion != null && (
-              <p className="text-xs text-zinc-500">
-                Forecast version used: v{forecastVersion}. Forecasts are immutable; updates ship as new versions.
-              </p>
-            )}
-            <Link
-              href={shareMode ? "/predictions?share=1" : "/predictions"}
-              className="inline-flex rounded border border-zinc-600 bg-zinc-800 px-3 py-2 text-sm font-medium text-zinc-200 hover:bg-zinc-700 hover:text-white"
-            >
-              View Published Forecast
-            </Link>
-          </div>
           <ScenarioCard
             activeScenario={snapshot.active_scenario}
             confidence={snapshot.confidence}
@@ -119,6 +125,13 @@ export async function Dashboard(props: { shareMode?: boolean; nerdMode?: boolean
           <ProbabilityBar
             probs={snapshot.scenario_probs as Record<string, number>}
             active={snapshot.active_scenario}
+          />
+          <DashboardThisWeekMini
+            weekEnding={snapshot.week_ending}
+            btcStatus={activeAlign?.btc?.inBand ? "in" : activeAlign?.btc != null ? "out" : "unknown"}
+            spyStatus={activeAlign?.spy?.inBand ? "in" : activeAlign?.spy != null ? "out" : "unknown"}
+            btcDriftPct={activeAlign?.btc?.driftPct}
+            spyDriftPct={activeAlign?.spy?.driftPct}
           />
           {evidenceSummaryLines.length > 0 && (
             <section className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-3">
@@ -162,18 +175,21 @@ export async function Dashboard(props: { shareMode?: boolean; nerdMode?: boolean
             dataCompleteness={snapshot.data_completeness}
             weekEnding={snapshot.week_ending}
           />
+          {nerdMode && !shareMode && <DataHealthCard data={dataHealth} />}
           {nerdMode && !shareMode && (
-            <ReceiptsPanel
-              weekEnding={String(snapshot.week_ending)}
-              indicatorRows={evidence.indicatorRows}
-              definitions={evidence.definitions}
-              initialOpen
-            />
-          )}
-          {nerdMode && !shareMode && copySummaryText && (
-            <div className="flex items-center gap-2">
-              <CopySummaryButton summaryText={copySummaryText} />
-            </div>
+            <>
+              <ReceiptsPanel
+                weekEnding={String(snapshot.week_ending)}
+                indicatorRows={evidence.indicatorRows}
+                definitions={evidence.definitions}
+                initialOpen
+              />
+              {copySummaryText && (
+                <div className="flex items-center gap-2">
+                  <CopySummaryButton summaryText={copySummaryText} />
+                </div>
+              )}
+            </>
           )}
         </>
       ) : (
