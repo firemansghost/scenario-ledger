@@ -23,31 +23,25 @@ export function PublishedForecastSummary({
   return (
     <div className="space-y-4 rounded-lg border border-zinc-800 bg-zinc-900/50 p-4">
       <div className="space-y-1">
-        <h2 className="text-lg font-medium">Published Forecast</h2>
+        <h2 className="text-lg font-medium">Published Forecast (Pinned)</h2>
         <p className="text-sm text-zinc-500">
-          What we published, when we published it, and what it implies right now.
+          Frozen on purpose. Weekly evidence updates the read — not the published bands.
         </p>
       </div>
 
       {(version != null || createdAt) && (
-        <div className="space-y-1">
-          <p className="text-sm text-zinc-400">Published as-of</p>
-          <p className="text-sm text-zinc-500">
-            v{version ?? "—"}
-            {createdAt != null && ` · ${new Date(createdAt).toLocaleDateString()}`}
-          </p>
-          <p className="text-xs text-zinc-600">
-            Forecasts don’t get edited. Updates ship as new versions.
-          </p>
-        </div>
+        <p className="text-sm text-zinc-400">
+          Pinned: v{version ?? "—"}
+          {createdAt != null && ` · ${new Date(createdAt).toLocaleDateString()}`}
+        </p>
       )}
 
       {scenario && (
         <div className="space-y-1">
-          <p className="text-sm text-zinc-400">Current read (scenario)</p>
+          <p className="text-sm text-zinc-400">Current read</p>
           <p className="font-medium text-zinc-200">{scenario.label}</p>
           <p className="text-xs text-zinc-600">
-            This is the model’s best fit to the latest evidence, not destiny.
+            Best fit to the latest evidence. Not destiny.
           </p>
         </div>
       )}
@@ -61,7 +55,7 @@ export function PublishedForecastSummary({
             {firstPeriod.spxRange.low}–{firstPeriod.spxRange.high}
           </p>
           <p className="text-xs text-zinc-600">
-            Bands are ranges, not targets. Price can tag edges and still be “in.”
+            Bands are envelopes, not targets. Edges count as &quot;in.&quot;
           </p>
         </div>
       )}
@@ -77,7 +71,7 @@ export function PublishedForecastSummary({
             ))}
           </ul>
           <p className="text-xs text-zinc-600">
-            “Window” means timing probability, not a guarantee the market behaves.
+            &quot;Window&quot; means timing probability, not a guarantee the market behaves.
           </p>
         </div>
       )}
@@ -112,7 +106,7 @@ export function PublishedForecastSummary({
         </ul>
 
         <p className="text-xs text-zinc-600 pt-1">
-          Educational speculation. Not investment advice. If you need certainty, buy a toaster.
+          If you need certainty, buy a toaster.
         </p>
       </div>
     </div>

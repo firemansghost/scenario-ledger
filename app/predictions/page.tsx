@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabaseClient";
 import { MissionBanner } from "@/components/MissionBanner";
 import { ForecastAtAGlance } from "@/components/ForecastAtAGlance";
+import { NearTermMap } from "@/components/NearTermMap";
 import { PublishedForecastSummary } from "@/components/PublishedForecastSummary";
 import { ScenarioComparisonGrid } from "@/components/ScenarioComparisonGrid";
 import { ThisWeekVsForecast } from "@/components/ThisWeekVsForecast";
@@ -37,12 +38,15 @@ export default async function PredictionsPage() {
       </p>
       {config ? (
         <>
-          <PublishedForecastSummary
-            config={config}
-            version={forecast?.version ?? undefined}
-            createdAt={forecast?.created_at ?? null}
-            activeScenario={activeScenario}
-          />
+          <div className="grid gap-6 md:grid-cols-2">
+            <PublishedForecastSummary
+              config={config}
+              version={forecast?.version ?? undefined}
+              createdAt={forecast?.created_at ?? null}
+              activeScenario={activeScenario}
+            />
+            <NearTermMap config={config} activeScenario={activeScenario} maxBullets={6} />
+          </div>
           {snapshot && (
             <section className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-4">
               <ThisWeekVsForecast snapshot={snapshot} factor={factor} />

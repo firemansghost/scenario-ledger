@@ -58,6 +58,7 @@ export function ForecastAtAGlance({ config, forecastName, version }: ForecastAtA
           </section>
           <section>
             <h3 className="mb-2 text-sm font-medium text-zinc-400">Period bands</h3>
+            <p className="mb-2 text-xs text-zinc-500">These are wide on purpose. Use checkpoints + invalidations to track the path.</p>
             <div className="space-y-2">{(scenario.periods ?? []).map((p, i) => <PeriodBlock key={i} p={p} />)}</div>
           </section>
           {(athWindows?.length ?? 0) > 0 && (
