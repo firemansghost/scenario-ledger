@@ -90,7 +90,7 @@ export function AlignmentChart({ snapshots, factor }: AlignmentChartProps) {
         </div>
       </div>
       <p className="text-xs text-zinc-500">
-        SPX equiv factor: {factor}. Drift = % outside scenario band (null when in band).
+        Drift = % outside scenario band (null when in band).
       </p>
     </div>
   );

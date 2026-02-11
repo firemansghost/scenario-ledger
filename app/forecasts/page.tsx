@@ -33,7 +33,15 @@ export default async function ForecastsPage() {
       </div>
       {activeConfig && activeForecast && (
         <section className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-4">
-          <h2 className="mb-3 text-lg font-medium">Active forecast preview</h2>
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <h2 className="text-lg font-medium">Active forecast preview</h2>
+            <Link
+              href="/predictions"
+              className="rounded border border-zinc-600 bg-zinc-800 px-3 py-2 text-sm font-medium text-zinc-200 hover:bg-zinc-700"
+            >
+              View Published Forecast
+            </Link>
+          </div>
           <ForecastAtAGlance
             config={activeConfig}
             forecastName={activeForecast.name}

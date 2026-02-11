@@ -88,14 +88,11 @@ They often do.
 
 ## What Alignment means
 
-Alignment checks:  
-- Did BTC and SPY (and the SPX-equivalent display) stay **inside** the forecast bands?
+Alignment uses **SPY price** (and BTC) vs the forecast bands.  
+**Drift** = how far outside the band (in %).  
 
-If a scenario says:
-- “BTC should be between X and Y”  
-- “SPX-equivalent should be between A and B”
-
-…Alignment tells you if reality stayed in that lane or drifted out.
+If a scenario says “SPY should be between A and B,” Alignment tells you if the weekly close stayed in that lane or drifted out.  
+(In Nerd Mode you can also see the SPX-equivalent approximation and factor.)
 
 ---
 
@@ -130,6 +127,16 @@ It’s not investment advice.
 It’s a structured way to track evidence without narrative drift.
 
 ---
+
+**Published forecast:**  
+Go to **Predictions** (nav or Dashboard “View Published Forecast”) to see the active forecast bands, ATH windows, and timeline.  
+The “Why this forecast exists” strip links to: Bitcoin 4-Year Cycle, Equity 4-Year Cycle, and How scoring works.
+
+**Learn more:**  
+- **Learn** (nav) → Start here, Bitcoin cycle history, Equity 4-year cycle history, Scoring model.  
+- `/learn/btc-cycle` — cycle day counts and rule of thumb.  
+- `/learn/equity-cycle` — SPY presidential-cycle stats (price only).  
+- `/learn/scoring` — indicator → state → weights → probabilities.
 
 If you want to understand how the engine works:
 - `docs/PRINCIPLES.md`

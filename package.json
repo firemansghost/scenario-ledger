@@ -9,6 +9,9 @@
     "lint": "next lint",
     "seed": "tsx scripts/seed.ts",
     "backfill:daily": "tsx scripts/backfill-daily.ts",
+    "backfill:spy-history": "tsx scripts/backfill-spy-history.ts",
+    "backfill:btc-history": "tsx scripts/backfill-btc-history.ts",
+    "history:build": "tsx scripts/build-history-rollups.ts",
     "test": "vitest run",
     "test:watch": "vitest"
   },

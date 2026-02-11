@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabaseClient";
 import { AlignmentChart } from "@/components/alignment-chart";
+import { AlignmentNerdExtra } from "@/components/AlignmentNerdExtra";
 import { MissionBanner } from "@/components/MissionBanner";
 
 export const revalidate = 60;
@@ -25,7 +26,7 @@ export default async function AlignmentPage() {
       <MissionBanner />
       <h1 className="text-xl font-semibold">Alignment</h1>
       <p className="text-sm text-zinc-400">
-        BTC/SPY vs forecast bands by scenario. Drift = % outside band. SPX band + SPX-equiv close + SPY actual.
+        Alignment uses SPY price. Drift = % outside forecast band. BTC and SPY vs scenario bands by week.
       </p>
       {snapshots && snapshots.length > 0 ? (
         <>
@@ -67,11 +68,8 @@ export default async function AlignmentPage() {
                   </div>
                   <dl className="grid gap-2 text-sm">
                     <div>
-                      <dt className="text-zinc-400">SPX equiv / SPY / factor</dt>
-                      <dd className="font-mono">
-                        {latest?.spx_equiv != null ? Number(latest.spx_equiv).toFixed(2) : "—"} /{" "}
-                        {latest?.spy_close != null ? Number(latest.spy_close).toFixed(2) : "—"} / {factor}
-                      </dd>
+                      <dt className="text-zinc-400">SPY close</dt>
+                      <dd className="font-mono">{latest?.spy_close != null ? Number(latest.spy_close).toFixed(2) : "—"}</dd>
                     </div>
                     {latest?.btc_close != null && (
                       <div>
@@ -80,6 +78,13 @@ export default async function AlignmentPage() {
                       </div>
                     )}
                   </dl>
+                  <div className="mt-3">
+                    <AlignmentNerdExtra
+                      spxEquiv={latest?.spx_equiv ?? null}
+                      spyClose={latest?.spy_close ?? null}
+                      factor={factor}
+                    />
+                  </div>
                 </>
               );
             })()}

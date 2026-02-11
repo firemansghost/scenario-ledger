@@ -253,6 +253,50 @@ It exists so future-us doesn’t have to reverse engineer intent from commit mes
 
 ---
 
+## 021 — history_rollups cache for learn pages
+- **Status:** Accepted  
+- **Date:** 2026-02-11  
+- **Context:** /learn/btc-cycle and /learn/equity-cycle need computed stats; computing on every request from raw daily_series is slow.  
+- **Choice:** New table `history_rollups` (key, computed_at, as_of_date, data, meta). Script `npm run history:build` writes `btc_cycle_daycounts_v1` (from static ref) and `spy_presidential_cycle_v1` (from daily_series SPY). Pages read rollups; if missing, show “History pack not built yet.”  
+- **Rationale:** Fast page loads; single source of truth for cycle stats.  
+- **Consequences:** Admin must run backfill:spy-history then history:build for equity-cycle to show data.  
+- **Follow-ups:** Optional: schedule history:build after backfills.
+
+---
+
+## 022 — SPY (price only) for equity-cycle stats
+- **Status:** Accepted  
+- **Date:** 2026-02-11  
+- **Context:** Equity 4-year cycle explainer needs historical returns; we don’t have licensed SPX index data.  
+- **Choice:** Use **SPY price history** (Stooq) for presidential-cycle stats. Label clearly: “SPY price return (no dividends).”  
+- **Rationale:** Free, available; definitions (cycle year 1–4) are clear so we don’t get roasted.  
+- **Consequences:** Returns are price-only, not total return.  
+- **Follow-ups:** None.
+
+---
+
+## 023 — Neutral indicator weights = zero (no fake certainty)
+- **Status:** Accepted  
+- **Date:** 2026-02-11  
+- **Context:** When all indicators were “neutral,” base scenario received +1 repeatedly and softmax produced ~99%+ base (fake certainty).  
+- **Choice:** Neutral weights set to `{ bull: 0, base: 0, bear: 0 }` for all indicators. Priors + temperature in scoring keep low-signal weeks from looking overconfident.  
+- **Rationale:** Neutral = no evidence for any scenario.  
+- **Consequences:** Low-signal weeks show more balanced probabilities.  
+- **Follow-ups:** Document in SCORING_MODEL.md.
+
+---
+
+## 024 — Alignment default: SPY-only; SPX-equivalent in Nerd Mode only
+- **Status:** Accepted  
+- **Date:** 2026-02-11  
+- **Context:** Alignment page mixed “SPX band,” “SPX-equiv,” “SPY actual,” “factor” — confusing for non-nerds.  
+- **Choice:** Default copy: “Alignment uses SPY price. Drift = % outside forecast band.” Show SPY close and BTC; SPX-equivalent and factor only in a Nerd Mode–only toggle (“Show SPX-equivalent (approx)”).  
+- **Rationale:** Human-readable by default; power users still get the math.  
+- **Consequences:** AlignmentNerdExtra component gates SPX block on client-side nerd cookie.  
+- **Follow-ups:** None.
+
+---
+
 ## Backlog Decisions (not decided yet)
 These are real candidates, but not locked:
 - Forecast diff viewer (v1 vs v2) and explicit change notes UI

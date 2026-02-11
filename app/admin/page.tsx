@@ -32,11 +32,18 @@ export default async function AdminPage({
     .select("id, series_key, dt, value, reason, created_at")
     .order("dt", { ascending: false });
 
+  const { data: rollups } = await supabase
+    .from("history_rollups")
+    .select("computed_at")
+    .order("computed_at", { ascending: false })
+    .limit(1);
+  const lastRollupBuildAt = rollups?.[0]?.computed_at ?? null;
+
   return (
     <div className="space-y-8">
       <h1 className="text-xl font-semibold">Admin</h1>
 
-      <AdminTools overrides={overrides ?? []} />
+      <AdminTools overrides={overrides ?? []} lastRollupBuildAt={lastRollupBuildAt} />
 
       <section>
         <h2 className="mb-2 font-medium">Data fetch logs</h2>

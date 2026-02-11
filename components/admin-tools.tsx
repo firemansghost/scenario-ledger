@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { BuildRollupsButton } from "./BuildRollupsButton";
 import { ForceIngestButton } from "./force-ingest-button";
 import { RunWeeklyButton } from "./run-weekly-button";
 import { ManualOverrides } from "./manual-overrides";
@@ -16,9 +17,10 @@ interface Override {
 
 interface AdminToolsProps {
   overrides: Override[];
+  lastRollupBuildAt: string | null;
 }
 
-export function AdminTools({ overrides }: AdminToolsProps) {
+export function AdminTools({ overrides, lastRollupBuildAt }: AdminToolsProps) {
   const [adminSecret, setAdminSecret] = useState("");
 
   return (
@@ -35,6 +37,17 @@ export function AdminTools({ overrides }: AdminToolsProps) {
           onChange={(e) => setAdminSecret(e.target.value)}
         />
       </div>
+
+      <section>
+        <h2 className="mb-2 font-medium">History rollups</h2>
+        <p className="mb-2 text-sm text-zinc-500">
+          Powers /learn/btc-cycle and /learn/equity-cycle. Run after backfilling SPY history.
+        </p>
+        <p className="mb-2 text-sm text-zinc-400">
+          Last rollup build: {lastRollupBuildAt ? new Date(lastRollupBuildAt).toLocaleString() : "never"}
+        </p>
+        <BuildRollupsButton adminSecret={adminSecret || undefined} />
+      </section>
 
       <section>
         <h2 className="mb-2 font-medium">Force-run daily ingest</h2>

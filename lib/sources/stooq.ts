@@ -127,12 +127,24 @@ export async function fetchStooqSpyRange(
   start.setDate(start.getDate() - calendarDaysBack);
   const d1 = start.toISOString().slice(0, 10).replace(/-/g, "");
   const d2 = end.toISOString().slice(0, 10).replace(/-/g, "");
-  const url = `https://stooq.com/q/d/l/?s=${STOOQ_SPY_TICKER}&d1=${d1}&d2=${d2}&i=d`;
+  return fetchStooqSpyDateRange(d1, d2, maxTradingRows);
+}
+
+/**
+ * Fetch SPY daily closes from Stooq for an exact date range (YYYYMMDD).
+ * For history backfill: chunk by 2–5 years to avoid giant responses.
+ */
+export async function fetchStooqSpyDateRange(
+  d1YYYYMMDD: string,
+  d2YYYYMMDD: string,
+  maxRows = 5000
+): Promise<DailyDataPoint[]> {
+  const url = `https://stooq.com/q/d/l/?s=${STOOQ_SPY_TICKER}&d1=${d1YYYYMMDD}&d2=${d2YYYYMMDD}&i=d`;
   const res = await fetch(url);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const text = await res.text();
   const rows = parseStooqCsv(text);
-  if (rows.length === 0) throw new Error("No rows");
-  const sorted = rows.sort((a, b) => b.dt.localeCompare(a.dt));
-  return sorted.slice(0, maxTradingRows);
+  if (rows.length === 0) return [];
+  const sorted = rows.sort((a, b) => a.dt.localeCompare(b.dt));
+  return sorted.slice(-maxRows);
 }
