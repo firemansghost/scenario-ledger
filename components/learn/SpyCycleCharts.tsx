@@ -16,6 +16,8 @@ export interface SpyPresidentialRollup {
 
 interface SpyCycleChartsProps {
   data: SpyPresidentialRollup;
+  /** e.g. "SPX" or "SPY" for chart labels */
+  seriesLabel?: string;
 }
 
 const CYCLE_LABEL: Record<number, string> = {
@@ -25,14 +27,14 @@ const CYCLE_LABEL: Record<number, string> = {
   4: "Year 4 (election)",
 };
 
-export function SpyCycleCharts({ data }: SpyCycleChartsProps) {
+export function SpyCycleCharts({ data, seriesLabel = "SPY" }: SpyCycleChartsProps) {
   return (
     <div className="space-y-6">
       <p className="text-sm text-zinc-400">
-        This is <strong>SPY price return</strong> (no dividends). Cycle year: Year 4 = election (year % 4 === 0), Year 1 = post-election, Year 2 = midterm, Year 3 = pre-election.
+        This is <strong>{seriesLabel} price return</strong> (no dividends). Cycle year: Year 4 = election (year % 4 === 0), Year 1 = post-election, Year 2 = midterm, Year 3 = pre-election.
       </p>
       <section className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-4">
-        <h3 className="mb-2 font-medium">Average SPY annual return by presidential cycle year</h3>
+        <h3 className="mb-2 font-medium">Average {seriesLabel} annual return by presidential cycle year</h3>
         <div className="grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
           {[1, 2, 3, 4].map((cy) => (
             <div key={cy} className="rounded border border-zinc-700 p-2">
@@ -58,7 +60,7 @@ export function SpyCycleCharts({ data }: SpyCycleChartsProps) {
       )}
       {data.yearly && data.yearly.length > 0 && (
         <section className="overflow-x-auto rounded-lg border border-zinc-800">
-          <h3 className="mb-2 p-2 font-medium">SPY annual return by year (since 1994)</h3>
+          <h3 className="mb-2 p-2 font-medium">{seriesLabel} annual return by year</h3>
           <table className="w-full text-left text-sm">
             <thead>
               <tr className="border-b border-zinc-700 bg-zinc-900/50">

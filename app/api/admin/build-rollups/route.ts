@@ -28,6 +28,7 @@ export async function POST(req: Request) {
       lastComputedAt: result.lastComputedAt,
       btcWritten: result.btcWritten,
       spyWritten: result.spyWritten,
+      spxWritten: result.spxWritten,
     });
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);

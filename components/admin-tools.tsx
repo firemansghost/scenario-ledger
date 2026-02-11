@@ -15,12 +15,21 @@ interface Override {
   created_at: string;
 }
 
+interface SeriesCoverage {
+  present: boolean;
+  rowCount?: number;
+  minDt?: string;
+  maxDt?: string;
+}
+
 interface AdminToolsProps {
   overrides: Override[];
   lastRollupBuildAt: string | null;
+  spxCoverage: SeriesCoverage;
+  spyCoverage: SeriesCoverage;
 }
 
-export function AdminTools({ overrides, lastRollupBuildAt }: AdminToolsProps) {
+export function AdminTools({ overrides, lastRollupBuildAt, spxCoverage, spyCoverage }: AdminToolsProps) {
   const [adminSecret, setAdminSecret] = useState("");
 
   return (
@@ -39,9 +48,26 @@ export function AdminTools({ overrides, lastRollupBuildAt }: AdminToolsProps) {
       </div>
 
       <section>
+        <h2 className="mb-2 font-medium">Coverage</h2>
+        <div className="space-y-1 text-sm text-zinc-400">
+          <p>
+            SPX: {spxCoverage.present
+              ? `Present: ${spxCoverage.rowCount?.toLocaleString() ?? "—"} rows (${spxCoverage.minDt ?? "—"} → ${spxCoverage.maxDt ?? "—"})`
+              : "Missing"}
+          </p>
+          <p>
+            SPY: {spyCoverage.present
+              ? `Present: ${spyCoverage.rowCount?.toLocaleString() ?? "—"} rows (${spyCoverage.minDt ?? "—"} → ${spyCoverage.maxDt ?? "—"})`
+              : "Missing"}
+          </p>
+        </div>
+        <p className="mt-1 text-xs text-zinc-500">SPX backfill: <code className="rounded bg-zinc-800 px-1">npm run backfill:spx-history</code></p>
+      </section>
+
+      <section>
         <h2 className="mb-2 font-medium">History rollups</h2>
         <p className="mb-2 text-sm text-zinc-500">
-          Powers /learn/btc-cycle and /learn/equity-cycle. Run after backfilling SPY history.
+          Powers /learn/btc-cycle and /learn/equity-cycle. Prefers SPX for equity when present; else SPY.
         </p>
         <p className="mb-2 text-sm text-zinc-400">
           Last rollup build: {lastRollupBuildAt ? new Date(lastRollupBuildAt).toLocaleString() : "never"}

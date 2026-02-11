@@ -139,11 +139,57 @@ export async function fetchStooqSpyDateRange(
   d2YYYYMMDD: string,
   maxRows = 5000
 ): Promise<DailyDataPoint[]> {
-  const url = `https://stooq.com/q/d/l/?s=${STOOQ_SPY_TICKER}&d1=${d1YYYYMMDD}&d2=${d2YYYYMMDD}&i=d`;
+  return fetchStooqDateRangeForTicker(STOOQ_SPY_TICKER, "spy", d1YYYYMMDD, d2YYYYMMDD, maxRows);
+}
+
+/**
+ * Parse Stooq CSV into daily points with the given series_key.
+ */
+function parseStooqCsvWithKey(text: string, seriesKey: string): DailyDataPoint[] {
+  const lines = text.trim().split("\n");
+  if (lines.length < 2) return [];
+  const header = lines[0].toLowerCase();
+  const dateIdx = header.includes("date") ? header.split(",").indexOf("date") : 0;
+  const closeIdx = header.includes("close") ? header.split(",").indexOf("close") : 4;
+  const data: DailyDataPoint[] = [];
+  for (let i = 1; i < lines.length; i++) {
+    const parts = lines[i].split(",");
+    const dateVal = parts[dateIdx]?.trim();
+    const closeVal = parts[closeIdx]?.trim();
+    if (!dateVal || closeVal === undefined) continue;
+    let parsedDate = dateVal;
+    if (dateVal.includes("/")) {
+      const [m, d, y] = dateVal.split("/");
+      parsedDate = `${y}-${m!.padStart(2, "0")}-${d!.padStart(2, "0")}`;
+    }
+    const value = parseFloat(closeVal);
+    if (!Number.isFinite(value)) continue;
+    data.push({
+      series_key: seriesKey,
+      source: "stooq",
+      dt: parsedDate,
+      value: Math.round(value * 100) / 100,
+    });
+  }
+  return data;
+}
+
+/**
+ * Fetch daily closes from Stooq for any ticker and date range (YYYYMMDD).
+ * Ticker is URL-encoded (e.g. ^gspc for S&P 500). Used for SPX history backfill.
+ */
+export async function fetchStooqDateRangeForTicker(
+  ticker: string,
+  seriesKey: string,
+  d1YYYYMMDD: string,
+  d2YYYYMMDD: string,
+  maxRows = 5000
+): Promise<DailyDataPoint[]> {
+  const url = `https://stooq.com/q/d/l/?s=${encodeURIComponent(ticker)}&d1=${d1YYYYMMDD}&d2=${d2YYYYMMDD}&i=d`;
   const res = await fetch(url);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const text = await res.text();
-  const rows = parseStooqCsv(text);
+  const rows = parseStooqCsvWithKey(text, seriesKey);
   if (rows.length === 0) return [];
   const sorted = rows.sort((a, b) => a.dt.localeCompare(b.dt));
   return sorted.slice(-maxRows);

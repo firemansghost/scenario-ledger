@@ -19,6 +19,7 @@ async function main() {
   const supabase = createSupabase();
   const result = await buildHistoryRollups(supabase);
   console.log("  btc_cycle_daycounts_v1 written:", result.btcWritten);
+  console.log("  spx_presidential_cycle_v1 written:", result.spxWritten);
   console.log("  spy_presidential_cycle_v1 written:", result.spyWritten);
   console.log("  Last computed_at:", result.lastComputedAt);
   console.log("Done.");
