@@ -12,6 +12,7 @@ import { DataHealthCard } from "@/components/DataHealthCard";
 import { DataStatusBadge } from "@/components/data-status-badge";
 import { HowToRead } from "@/components/HowToRead";
 import { ReceiptsPanel } from "@/components/ReceiptsPanel";
+import { DashboardIntro } from "@/components/DashboardIntro";
 import { WeeklyBriefCard } from "@/components/WeeklyBriefCard";
 import type { ForecastConfig, ScenarioKey } from "@/lib/types";
 
@@ -155,6 +156,7 @@ export async function Dashboard(props: { shareMode?: boolean; nerdMode?: boolean
           {weeklyBrief && (
             <WeeklyBriefCard brief={weeklyBrief} shareMode={shareMode} />
           )}
+          <DashboardIntro shareMode={shareMode} />
           {config && activeScenarioKey && (
             <DashboardNowNextWatch
               latestSnapshot={{
@@ -252,7 +254,10 @@ export async function Dashboard(props: { shareMode?: boolean; nerdMode?: boolean
           )}
         </>
       ) : (
-        <p className="text-zinc-400">No weekly snapshot yet. Run the weekly cron or seed data.</p>
+        <>
+          <DashboardIntro shareMode={shareMode} />
+          <p className="text-zinc-400">No weekly snapshot yet. Run the weekly cron or seed data.</p>
+        </>
       )}
     </div>
   );

@@ -28,7 +28,7 @@ export function Nav() {
           Briefs
         </Link>
         <Link href="/predictions" className="text-muted-foreground hover:text-foreground">
-          Predictions
+          Forecast Brief
         </Link>
         <Link href="/evidence" className="text-muted-foreground hover:text-foreground">
           Evidence
