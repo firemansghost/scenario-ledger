@@ -28,7 +28,7 @@ export function PublishedForecastSummary({
   activeScenario = "base",
 }: PublishedForecastSummaryProps) {
   const scenario = config.scenarios?.[activeScenario];
-  const firstPeriods = (scenario?.periods ?? []).slice(0, 3);
+  const firstPeriods = (scenario?.periods ?? []).slice(0, 4);
   const athWindows = config.athWindows as
     | { key?: string; label?: string; displayRange?: string }[]
     | undefined;
@@ -69,6 +69,9 @@ export function PublishedForecastSummary({
           </div>
           <p className="text-xs text-zinc-600">
             Bands are envelopes, not targets. Edges count as &quot;in.&quot;
+          </p>
+          <p className="text-xs text-zinc-600">
+            Equity ranges are shown in SPX points. Alignment converts bands to SPY using that week&apos;s factor.
           </p>
         </div>
       )}
