@@ -7,10 +7,13 @@ interface DashboardThisWeekMiniProps {
 }
 
 function StatusCell({ status, driftPct }: { status: "in" | "out" | "unknown"; driftPct?: number | null }) {
-  if (status === "in") return <span className="text-emerald-400">In band</span>;
+  if (status === "in") return <span className="text-emerald-400">In band (0.0%)</span>;
   if (status === "out") {
-    const pct = driftPct != null ? driftPct.toFixed(1) : "";
-    return <span className="text-amber-400">Outside{pct ? ` (${pct}% drift)` : ""}</span>;
+    if (driftPct != null) {
+      const sign = driftPct >= 0 ? "+" : "";
+      return <span className="text-amber-400">Out ({sign}{driftPct.toFixed(1)}%)</span>;
+    }
+    return <span className="text-amber-400">Out</span>;
   }
   return <span className="text-zinc-500">—</span>;
 }

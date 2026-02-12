@@ -19,9 +19,11 @@ function inBand(value: number, low: number, high: number) {
   const stretch = value <= high;
   const midIn = value >= Math.min(mid, low) && value <= Math.max(mid, high);
   const inBandResult = value >= low && value <= high;
-  let driftPct: number | undefined;
-  if (!inBandResult) {
-    if (value < low) driftPct = ((low - value) / low) * 100;
+  let driftPct: number;
+  if (inBandResult) {
+    driftPct = 0;
+  } else {
+    if (value < low) driftPct = ((value - low) / low) * 100;
     else driftPct = ((value - high) / high) * 100;
   }
   return {

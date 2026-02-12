@@ -15,9 +15,12 @@ interface ThisWeekVsForecastProps {
 }
 
 function DriftCell({ inBand, driftPct }: { inBand: boolean; driftPct?: number }) {
-  if (inBand) return <span className="text-emerald-400">In band</span>;
-  if (driftPct != null) return <span className="text-amber-400">Out ({driftPct.toFixed(1)}% drift)</span>;
-  return <span className="text-amber-400">Out (drift pending)</span>;
+  if (inBand) return <span className="text-emerald-400">In band (0.0%)</span>;
+  if (driftPct != null) {
+    const sign = driftPct >= 0 ? "+" : "";
+    return <span className="text-amber-400">Out ({sign}{driftPct.toFixed(1)}%)</span>;
+  }
+  return <span className="text-zinc-500">—</span>;
 }
 
 export function ThisWeekVsForecast({ snapshot, factor }: ThisWeekVsForecastProps) {

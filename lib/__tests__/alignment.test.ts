@@ -64,6 +64,8 @@ describe("computeAlignment", () => {
     expect(spx_equiv).toBe(6000);
     expect(alignment.base.btc.inBand).toBe(true);
     expect(alignment.base.spy.inBand).toBe(true);
+    expect(alignment.base.btc.driftPct).toBe(0);
+    expect(alignment.base.spy.driftPct).toBe(0);
   });
 
   it("marks SPY out of band when below low", () => {
