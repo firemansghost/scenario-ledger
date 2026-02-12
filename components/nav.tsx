@@ -24,6 +24,9 @@ export function Nav() {
         <Link href="/" className="text-muted-foreground hover:text-foreground">
           Dashboard
         </Link>
+        <Link href="/briefs" className="text-muted-foreground hover:text-foreground">
+          Briefs
+        </Link>
         <Link href="/predictions" className="text-muted-foreground hover:text-foreground">
           Predictions
         </Link>

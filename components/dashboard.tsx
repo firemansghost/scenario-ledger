@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabaseClient";
 import { createServiceRoleClient } from "@/lib/supabaseServer";
 import { getDataHealth } from "@/lib/dataHealth";
 import { getEvidenceForWeek } from "@/lib/getEvidenceForWeek";
+import { prettifyKey } from "@/lib/format";
 import { buildWeeklyBrief } from "@/lib/weeklyBrief";
 import { CopySummaryButton } from "@/components/CopySummaryButton";
 import { DashboardNowNextWatch } from "@/components/DashboardNowNextWatch";
@@ -23,7 +24,7 @@ function buildCopySummaryText(params: {
   lastDailyIngestAt: string | null;
 }): string {
   const { weekEnding, activeScenario, scenarioProbs, indicatorRows, definitions, lastDailyIngestAt } = params;
-  const defMap = Object.fromEntries(definitions.map((d) => [d.key, d]));
+  const defMap = Object.fromEntries(definitions.map((d) => [d.key, d.name]));
   const lines: string[] = [
     `ScenarioLedger — Week ending ${weekEnding}`,
     `Active scenario: ${activeScenario}`,
@@ -32,7 +33,7 @@ function buildCopySummaryText(params: {
     "Evidence (weekly):",
   ];
   for (const row of indicatorRows) {
-    const name = defMap[row.indicator_key]?.name ?? row.indicator_key;
+    const name = defMap[row.indicator_key]?.trim() || prettifyKey(row.indicator_key);
     lines.push(`- ${name}: ${row.state}`);
   }
   if (lastDailyIngestAt) {
@@ -70,14 +71,24 @@ export async function Dashboard(props: { shareMode?: boolean; nerdMode?: boolean
       : Promise.resolve({ indicatorRows: [], definitions: [] }),
   ]);
 
-  const { data: forecast } = snapshot
-    ? await supabase.from("forecasts").select("config, version, created_at").eq("id", snapshot.forecast_id).single()
-    : { data: null };
+  const [forecastResult, activeForecastResult] = await Promise.all([
+    snapshot
+      ? supabase.from("forecasts").select("config, version, created_at").eq("id", snapshot.forecast_id).single()
+      : Promise.resolve({ data: null }),
+    supabase.from("forecasts").select("id, version").eq("is_active", true).maybeSingle(),
+  ]);
 
+  const forecast = forecastResult.data;
+  const activeForecast = activeForecastResult.data;
   const forecastVersion = forecast?.version ?? null;
+  const computedOnForecastVersion = forecast?.version ?? null;
+  const activeForecastVersion =
+    activeForecast && snapshot && activeForecast.id !== snapshot.forecast_id
+      ? activeForecast.version
+      : undefined;
   const defMap = Object.fromEntries(evidence.definitions.map((d) => [d.key, d.name]));
   const evidenceSummaryLines = evidence.indicatorRows.slice(0, 3).map(
-    (r) => `${defMap[r.indicator_key] ?? r.indicator_key}: ${r.state}`
+    (r) => `${defMap[r.indicator_key]?.trim() || prettifyKey(r.indicator_key)}: ${r.state}`
   );
 
   const copySummaryText =
@@ -125,6 +136,8 @@ export async function Dashboard(props: { shareMode?: boolean; nerdMode?: boolean
         indicatorPrev: prevEvidence.indicatorRows,
         defsByKey,
         scenarioConfig,
+        computedOnForecastVersion: computedOnForecastVersion ?? undefined,
+        activeForecastVersion,
       })
     : null;
 
