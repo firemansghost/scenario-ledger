@@ -1,3 +1,4 @@
+import { prettifyKey } from "./format";
 import type { ScenarioKey } from "./types";
 
 type AlignRow = {
@@ -38,6 +39,11 @@ export interface WeeklyBriefResult {
     primaryHref: string;
     secondaryHref: string;
   };
+  /** Version of forecast used to compute this snapshot (from forecasts.version) */
+  computedOnForecastVersion?: number;
+  /** Version of active forecast if different (for mismatch pill) */
+  activeForecastVersion?: number;
+  weekEnding: string;
 }
 
 function formatDrift(inBand: boolean, driftPct?: number): string {
@@ -63,6 +69,8 @@ export function buildWeeklyBrief(params: {
   indicatorPrev?: IndicatorRow[];
   defsByKey?: DefMap;
   scenarioConfig?: { checkpoints: string[]; invalidations: string[] };
+  computedOnForecastVersion?: number;
+  activeForecastVersion?: number;
 }): WeeklyBriefResult {
   const {
     latestSnapshot,
@@ -71,6 +79,8 @@ export function buildWeeklyBrief(params: {
     indicatorPrev = [],
     defsByKey = {},
     scenarioConfig,
+    computedOnForecastVersion,
+    activeForecastVersion,
   } = params;
 
   const activeScenario = latestSnapshot.active_scenario;
@@ -141,7 +151,7 @@ export function buildWeeklyBrief(params: {
       for (const row of indicatorLatest) {
         const prev = prevByKey[row.indicator_key];
         if (!prev) continue;
-        const name = defsByKey[row.indicator_key] ?? row.indicator_key.replace(/_/g, " ");
+        const name = defsByKey[row.indicator_key]?.trim() || prettifyKey(row.indicator_key);
         if (prev.state !== row.state) {
           movers.push(`${name}: ${prev.state} → ${row.state}`);
         } else if (row.delta != null && Math.abs(row.delta) > 0.01) {
@@ -154,7 +164,7 @@ export function buildWeeklyBrief(params: {
     } else if ((latestSnapshot.top_contributors ?? []).length > 0) {
       const top = (latestSnapshot.top_contributors ?? [])
         .slice(0, 3)
-        .map((c) => defsByKey[c.indicator_key] ?? c.indicator_key.replace(/_/g, " "))
+        .map((c) => defsByKey[c.indicator_key]?.trim() || prettifyKey(c.indicator_key))
         .join(", ");
       bullets.push(`Top pushes: ${top}.`);
     }
@@ -186,5 +196,39 @@ export function buildWeeklyBrief(params: {
       primaryHref: "/predictions#this-week",
       secondaryHref: "/alignment",
     },
+    computedOnForecastVersion,
+    activeForecastVersion:
+      activeForecastVersion != null && computedOnForecastVersion != null && activeForecastVersion !== computedOnForecastVersion
+        ? activeForecastVersion
+        : undefined,
+    weekEnding: latestSnapshot.week_ending,
   };
+}
+
+/** Build plaintext summary for clipboard copy. */
+export function buildBriefCopyText(brief: WeeklyBriefResult, baseUrl?: string): string {
+  const lines: string[] = [
+    `ScenarioLedger — Weekly Brief (Week ending ${brief.weekEnding})`,
+    "",
+    brief.headline,
+    "",
+    ...brief.bullets.map((b) => `• ${b}`),
+    "",
+    `Read: ${brief.stats.scenarioLabel}`,
+    `Probs: Base ${brief.stats.probDeltas.base >= 0 ? "+" : ""}${brief.stats.probDeltas.base}pp | Bull ${brief.stats.probDeltas.bull >= 0 ? "+" : ""}${brief.stats.probDeltas.bull}pp | Bear ${brief.stats.probDeltas.bear >= 0 ? "+" : ""}${brief.stats.probDeltas.bear}pp`,
+  ];
+  if (brief.stats.btcStatus != null && brief.stats.eqStatus != null) {
+    lines.push(`Alignment: BTC ${brief.stats.btcStatus} · Equity ${brief.stats.eqStatus}`);
+  }
+  if (baseUrl) {
+    lines.push("");
+    const sep = baseUrl.includes("?") ? "&" : "?";
+    lines.push(`${baseUrl.replace(/\/$/, "")}/briefs/${brief.weekEnding}${sep}share=1`);
+  }
+  return lines.join("\n");
+}
+
+/** Build share URL for a brief (path + query). */
+export function getBriefSharePath(weekEnding: string): string {
+  return `/briefs/${weekEnding}?share=1`;
 }
