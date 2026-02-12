@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabaseClient";
 import { getEvidenceForWeek } from "@/lib/getEvidenceForWeek";
 import { buildWeeklyBrief } from "@/lib/weeklyBrief";
+import { MarkSeenWeek } from "@/components/MarkSeenWeek";
 import { WeeklyBriefCard } from "@/components/WeeklyBriefCard";
 import type { ForecastConfig, ScenarioKey } from "@/lib/types";
 
@@ -93,6 +94,7 @@ export default async function BriefDetailPage({
 
   return (
     <div className="space-y-6">
+      <MarkSeenWeek weekEnding={week_ending} shareMode={shareMode} />
       <a href="/briefs" className="text-sm text-zinc-500 hover:text-white">
         ← Back to archive
       </a>
