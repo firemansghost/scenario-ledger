@@ -58,8 +58,10 @@ export default async function ForecastDetailPage({
                   <li key={i} className="rounded border border-zinc-700 p-2">
                     <span className="text-zinc-400">{p.label}</span> {p.start} → {p.end}
                     <br />
-                    BTC USD: {p.btcRangeUsd.low}–{p.btcRangeUsd.high} · SPX: {p.spxRange.low}–{p.spxRange.high} ·
-                    SPY approx: {p.spyRangeApprox.low}–{p.spyRangeApprox.high}
+                    BTC USD: {p.btcRangeUsd.low}–{p.btcRangeUsd.high} · SPX: {p.spxRange.low}–{p.spxRange.high}
+                    {p.spyRangeApprox && (
+                      <> · SPY approx: {p.spyRangeApprox.low}–{p.spyRangeApprox.high}</>
+                    )}
                   </li>
                 ))}
               </ul>

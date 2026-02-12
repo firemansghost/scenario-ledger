@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabaseClient";
+import { DEFAULT_SPX_FACTOR } from "@/lib/equityProxy";
 import { AlignmentChart } from "@/components/alignment-chart";
 import { AlignmentNerdExtra } from "@/components/AlignmentNerdExtra";
 import { MissionBanner } from "@/components/MissionBanner";
@@ -14,19 +15,14 @@ export default async function AlignmentPage() {
   const supabase = createClient();
   const { data: snapshots } = await supabase
     .from("weekly_snapshots")
-    .select("week_ending, alignment, spx_equiv, spy_close, btc_close")
+    .select("week_ending, alignment, spx_equiv, spy_close, btc_close, spx_factor")
     .order("week_ending", { ascending: true });
 
-  const { data: forecast } = await supabase
-    .from("forecasts")
-    .select("config")
-    .eq("is_active", true)
-    .single();
-
-  const config = forecast?.config as { meta?: { spxToSpyFactor?: number } } | null;
-  const factor = config?.meta?.spxToSpyFactor ?? 0.1;
-
   const latest = snapshots?.length ? snapshots[snapshots.length - 1] : null;
+  const factorFromSnapshot = latest?.spx_factor ?? null;
+  const factor = factorFromSnapshot ?? DEFAULT_SPX_FACTOR;
+  const factorIsFallback = factorFromSnapshot == null;
+
   const align = (latest?.alignment as Record<string, AlignRow> | undefined) ?? {};
   const last8 = (snapshots ?? []).slice(-8).reverse();
 
@@ -44,12 +40,26 @@ export default async function AlignmentPage() {
       <MissionBanner />
       <h1 className="text-xl font-semibold">Alignment</h1>
       <p className="text-sm text-zinc-400">
-        Alignment uses SPY price vs forecast bands. Drift = % outside band. BTC and SPY by week.
+        Alignment asks one question: is price behaving like the scenario says it should?
+      </p>
+      <p className="text-sm text-zinc-400">
+        We compare weekly closes to the published bands. Drift is the % outside the nearest edge — and it&apos;s{" "}
+        <span className="font-medium text-zinc-200">0%</span> when you&apos;re in-band.
+      </p>
+      <p className="text-xs text-zinc-500">
+        Equity bands are defined in SPX points. We score equity alignment using SPY closes by converting bands with that week&apos;s SPY/SPX factor.
       </p>
       {snapshots && snapshots.length > 0 ? (
         <>
           <section className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-4">
             <h2 className="text-lg font-medium">Latest week</h2>
+            <p className="mb-1 text-sm text-zinc-500">
+              Week ending: <span className="font-mono text-zinc-300">{latest?.week_ending ?? "—"}</span>
+            </p>
+            <p className="mb-3 text-xs text-zinc-600">
+              Factor: <span className="font-mono">{factor.toFixed(4)}</span>
+              {factorIsFallback ? " (default — SPX missing this week)" : " (derived from SPY/SPX closes)"}
+            </p>
             <p className="mb-3 text-sm text-zinc-500">Drift = % outside band (0 when in-band).</p>
             <div className="mb-3 flex flex-wrap gap-2">
               {(["bull", "base", "bear"] as const).map((sc) => {

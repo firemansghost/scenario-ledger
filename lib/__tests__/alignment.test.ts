@@ -60,6 +60,7 @@ describe("computeAlignment", () => {
       weekEnding: "2026-03-14",
       btcClose: 70000,
       spyClose: 600,
+      spxFactor: 0.1,
     });
     expect(spx_equiv).toBe(6000);
     expect(alignment.base.btc.inBand).toBe(true);
@@ -74,6 +75,7 @@ describe("computeAlignment", () => {
       weekEnding: "2026-03-14",
       btcClose: null,
       spyClose: 500,
+      spxFactor: 0.1,
     });
     expect(alignment.base.spy.inBand).toBe(false);
     expect(alignment.base.spy.driftPct).toBeDefined();

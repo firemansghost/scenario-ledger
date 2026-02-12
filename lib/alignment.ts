@@ -1,4 +1,4 @@
-import { getSpxEquiv } from "./spxEquiv";
+import { approxSpyBandFromSpxBand } from "./equityProxy";
 import type { AlignmentResult, ForecastConfig, ScenarioKey, ScenarioAlignment } from "./types";
 
 function findPeriod(config: ForecastConfig, scenario: ScenarioKey, weekEnding: string) {
@@ -40,18 +40,20 @@ export interface AlignmentInput {
   weekEnding: string;
   btcClose: number | null;
   spyClose: number | null;
+  /** Per-snapshot factor (spy_close / spx_close). If null, falls back to meta.spxToSpyFactor or skips equity alignment. */
+  spxFactor: number | null;
 }
 
 export interface AlignmentOutput {
   alignment: AlignmentResult;
-  spx_factor: number;
+  spx_factor: number | null;
   spx_equiv: number | null;
 }
 
 export function computeAlignment(input: AlignmentInput): AlignmentOutput {
-  const { config, weekEnding, btcClose, spyClose } = input;
-  const factor = config.meta?.spxToSpyFactor ?? 0.1;
-  const spx_equiv = spyClose != null ? getSpxEquiv(spyClose, factor) : null;
+  const { config, weekEnding, btcClose, spyClose, spxFactor } = input;
+  const factor = spxFactor ?? config.meta?.spxToSpyFactor ?? null;
+  const spx_equiv = spyClose != null && factor != null && factor > 0 ? spyClose / factor : null;
 
   const alignment: AlignmentResult = {} as AlignmentResult;
 
@@ -64,15 +66,19 @@ export function computeAlignment(input: AlignmentInput): AlignmentOutput {
     if (period) {
       result.periodLabel = period.label;
       result.spxRange = period.spxRange;
-      result.spyRangeApprox = period.spyRangeApprox;
+      const spyBand =
+        factor != null && period.spxRange
+          ? approxSpyBandFromSpxBand(period.spxRange, factor)
+          : period.spyRangeApprox ?? null;
+      result.spyRangeApprox = spyBand ?? undefined;
       if (btcClose != null) {
         result.btc = {
           ...inBand(btcClose, period.btcRangeUsd.low, period.btcRangeUsd.high),
         };
       }
-      if (spyClose != null && period.spyRangeApprox) {
+      if (spyClose != null && spyBand) {
         result.spy = {
-          ...inBand(spyClose, period.spyRangeApprox.low, period.spyRangeApprox.high),
+          ...inBand(spyClose, spyBand.low, spyBand.high),
         };
       }
     }
