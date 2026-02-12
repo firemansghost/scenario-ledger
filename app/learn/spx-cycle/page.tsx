@@ -1,12 +1,10 @@
 import Link from "next/link";
-import { MissionBanner } from "@/components/MissionBanner";
 
 export const revalidate = 60;
 
 export default function SpxCyclePage() {
   return (
     <div className="space-y-6">
-      <MissionBanner />
       <Link href="/learn" className="text-sm text-zinc-500 hover:text-white">← Start here</Link>
       <h1 className="text-xl font-semibold">S&P / presidential cycle</h1>
       <p className="text-sm text-zinc-400">4-year cycle idea for equities: midterm-year tendency. We reference this conceptually in the forecast.</p>

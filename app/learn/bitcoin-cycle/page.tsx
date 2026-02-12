@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { MissionBanner } from "@/components/MissionBanner";
 import { BITCOIN_CYCLE_REFERENCE, CYCLE_RULE_OF_THUMB } from "@/lib/education/bitcoinCycle";
 
 export const revalidate = 60;
@@ -7,7 +6,6 @@ export const revalidate = 60;
 export default function BitcoinCyclePage() {
   return (
     <div className="space-y-6">
-      <MissionBanner />
       <Link href="/learn" className="text-sm text-zinc-500 hover:text-white">← Start here</Link>
       <h1 className="text-xl font-semibold">Bitcoin 4-year cycle</h1>
       <p className="text-sm text-zinc-400">Reference dates: Bottom → Halving → Peak → Next Bottom.</p>

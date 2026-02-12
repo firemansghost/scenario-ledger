@@ -2,7 +2,6 @@ import { createClient } from "@/lib/supabaseClient";
 import { DEFAULT_SPX_FACTOR } from "@/lib/equityProxy";
 import { AlignmentChart } from "@/components/alignment-chart";
 import { AlignmentNerdExtra } from "@/components/AlignmentNerdExtra";
-import { MissionBanner } from "@/components/MissionBanner";
 type AlignRow = {
   btc?: { inBand: boolean; driftPct?: number };
   spy?: { inBand: boolean; driftPct?: number };
@@ -37,7 +36,6 @@ export default async function AlignmentPage() {
 
   return (
     <div className="space-y-6">
-      <MissionBanner />
       <h1 className="text-xl font-semibold">Alignment</h1>
       <p className="text-sm text-zinc-400">
         Alignment asks one question: is price behaving like the scenario says it should?

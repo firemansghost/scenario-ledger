@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabaseClient";
 import { createServiceRoleClient } from "@/lib/supabaseServer";
 import { getDataHealth } from "@/lib/dataHealth";
 import { getEvidenceForWeek } from "@/lib/getEvidenceForWeek";
+import { buildWeeklyBrief } from "@/lib/weeklyBrief";
 import { CopySummaryButton } from "@/components/CopySummaryButton";
 import { DashboardNowNextWatch } from "@/components/DashboardNowNextWatch";
 import { DashboardAlignmentTiles } from "@/components/DashboardAlignmentTiles";
@@ -9,8 +10,8 @@ import { ScenarioProbChips } from "@/components/ScenarioProbChips";
 import { DataHealthCard } from "@/components/DataHealthCard";
 import { DataStatusBadge } from "@/components/data-status-badge";
 import { HowToRead } from "@/components/HowToRead";
-import { MissionBanner } from "@/components/MissionBanner";
 import { ReceiptsPanel } from "@/components/ReceiptsPanel";
+import { WeeklyBriefCard } from "@/components/WeeklyBriefCard";
 import type { ForecastConfig, ScenarioKey } from "@/lib/types";
 
 function buildCopySummaryText(params: {
@@ -59,10 +60,13 @@ export async function Dashboard(props: { shareMode?: boolean; nerdMode?: boolean
   const prevSnapshot = snapshots?.[1] ?? null;
   const snapshotsForSparkline = (snapshots ?? []).slice(0, 8).reverse();
 
-  const [dataHealth, evidence] = await Promise.all([
+  const [dataHealth, evidence, prevEvidence] = await Promise.all([
     getDataHealth(supabaseService),
     snapshot
       ? getEvidenceForWeek(supabase, String(snapshot.week_ending))
+      : Promise.resolve({ indicatorRows: [], definitions: [] }),
+    prevSnapshot
+      ? getEvidenceForWeek(supabase, String(prevSnapshot.week_ending))
       : Promise.resolve({ indicatorRows: [], definitions: [] }),
   ]);
 
@@ -92,9 +96,40 @@ export async function Dashboard(props: { shareMode?: boolean; nerdMode?: boolean
   const activeScenarioKey = snapshot?.active_scenario as ScenarioKey | undefined;
   const align = (snapshot?.alignment as Record<string, { btc?: { inBand: boolean; driftPct?: number }; spy?: { inBand: boolean; driftPct?: number } } | undefined>) ?? {};
 
+  const defsByKey = Object.fromEntries(evidence.definitions.map((d) => [d.key, d.name]));
+  const scenarioConfig = activeScenarioKey && config?.scenarios?.[activeScenarioKey]
+    ? { checkpoints: config.scenarios[activeScenarioKey].checkpoints ?? [], invalidations: config.scenarios[activeScenarioKey].invalidations ?? [] }
+    : undefined;
+
+  const weeklyBrief = snapshot
+    ? buildWeeklyBrief({
+        latestSnapshot: {
+          week_ending: snapshot.week_ending,
+          active_scenario: (snapshot.active_scenario as ScenarioKey) ?? "base",
+          confidence: snapshot.confidence,
+          scenario_probs: (snapshot.scenario_probs as Record<ScenarioKey, number>) ?? {},
+          alignment: align,
+          top_contributors: snapshot.top_contributors ?? [],
+        },
+        prevSnapshot: prevSnapshot
+          ? {
+              week_ending: prevSnapshot.week_ending,
+              active_scenario: (prevSnapshot.active_scenario as ScenarioKey) ?? "base",
+              confidence: prevSnapshot.confidence,
+              scenario_probs: (prevSnapshot.scenario_probs as Record<ScenarioKey, number>) ?? {},
+              alignment: (prevSnapshot.alignment as Record<string, { btc?: { inBand: boolean; driftPct?: number }; spy?: { inBand: boolean; driftPct?: number } } | undefined>) ?? {},
+              top_contributors: prevSnapshot.top_contributors ?? [],
+            }
+          : null,
+        indicatorLatest: evidence.indicatorRows,
+        indicatorPrev: prevEvidence.indicatorRows,
+        defsByKey,
+        scenarioConfig,
+      })
+    : null;
+
   return (
     <div className="space-y-6">
-      <MissionBanner />
       <HowToRead defaultExpanded={shareMode} />
       {snapshot ? (
         <>
@@ -103,6 +138,9 @@ export async function Dashboard(props: { shareMode?: boolean; nerdMode?: boolean
               <CopySummaryButton summaryText={copySummaryText} />
               <p className="text-xs text-zinc-500">Educational speculation. Not investment advice.</p>
             </div>
+          )}
+          {weeklyBrief && (
+            <WeeklyBriefCard brief={weeklyBrief} shareMode={shareMode} />
           )}
           {config && activeScenarioKey && (
             <DashboardNowNextWatch
