@@ -14,11 +14,28 @@ interface ThisWeekVsForecastProps {
   factor: number;
 }
 
-function DriftCell({ inBand, driftPct }: { inBand: boolean; driftPct?: number }) {
+function DriftCell({
+  inBand,
+  driftPct,
+  hasCell,
+}: {
+  inBand: boolean;
+  driftPct?: number;
+  hasCell: boolean;
+}) {
   if (inBand) return <span className="text-emerald-400">In band (0.0%)</span>;
   if (driftPct != null) {
     const sign = driftPct >= 0 ? "+" : "";
     return <span className="text-amber-400">Out ({sign}{driftPct.toFixed(1)}%)</span>;
+  }
+  const isPending = !hasCell || (!inBand && driftPct == null);
+  if (isPending) {
+    return (
+      <span>
+        <span className="text-zinc-500">Alignment pending</span>
+        <span className="block text-xs text-zinc-600">Waiting for weekly run / drift compute.</span>
+      </span>
+    );
   }
   return <span className="text-zinc-500">—</span>;
 }
@@ -51,8 +68,20 @@ export function ThisWeekVsForecast({ snapshot, factor }: ThisWeekVsForecastProps
               return (
                 <tr key={key} className="border-b border-zinc-800">
                   <td className="p-2 font-medium capitalize">{label}</td>
-                  <td className="p-2"><DriftCell inBand={a?.btc?.inBand ?? false} driftPct={a?.btc?.driftPct} /></td>
-                  <td className="p-2"><DriftCell inBand={a?.spy?.inBand ?? false} driftPct={a?.spy?.driftPct} /></td>
+                  <td className="p-2">
+                    <DriftCell
+                      inBand={a?.btc?.inBand ?? false}
+                      driftPct={a?.btc?.driftPct}
+                      hasCell={a?.btc != null}
+                    />
+                  </td>
+                  <td className="p-2">
+                    <DriftCell
+                      inBand={a?.spy?.inBand ?? false}
+                      driftPct={a?.spy?.driftPct}
+                      hasCell={a?.spy != null}
+                    />
+                  </td>
                 </tr>
               );
             })}

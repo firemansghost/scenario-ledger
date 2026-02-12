@@ -35,6 +35,7 @@ interface DashboardNowNextWatchProps {
   activeScenarioKey: ScenarioKey;
   shareMode: boolean;
   nerdMode: boolean;
+  defsByKey?: Record<string, string>;
 }
 
 export function DashboardNowNextWatch({
@@ -44,6 +45,7 @@ export function DashboardNowNextWatch({
   createdAt,
   activeScenarioKey,
   shareMode,
+  defsByKey = {},
 }: DashboardNowNextWatchProps) {
   const predictionsHref = shareMode ? "/predictions?share=1" : "/predictions";
   const scenario = forecastConfig.scenarios?.[activeScenarioKey];
@@ -68,7 +70,7 @@ export function DashboardNowNextWatch({
             <ul className="list-inside list-disc text-sm text-zinc-400">
               {topContributors.map((c) => (
                 <li key={c.indicator_key}>
-                  {deUglifyKey(c.indicator_key)} ({c.contribution > 0 ? "+" : ""}
+                  {(defsByKey[c.indicator_key]?.trim() || deUglifyKey(c.indicator_key))} ({c.contribution > 0 ? "+" : ""}
                   {c.contribution.toFixed(2)})
                 </li>
               ))}
@@ -95,6 +97,13 @@ export function DashboardNowNextWatch({
       <div className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-4">
         <h2 className="text-lg font-medium">Next</h2>
         <p className="mb-3 text-sm text-zinc-500">Current timebox (envelope, not target).</p>
+        {forecastVersion != null && (
+          <p className="mb-2 text-xs text-zinc-500">
+            <Link href={`${predictionsHref}#forecast-brief`} className="text-zinc-400 hover:text-zinc-200 underline">
+              Pinned forecast: v{forecastVersion}
+            </Link>
+          </p>
+        )}
         {currentPeriod && (
           <div className="space-y-2">
             <p className="font-medium text-zinc-300">

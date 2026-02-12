@@ -34,7 +34,7 @@ export default async function BtcCyclePage() {
       <section>
         <h2 className="mb-2 text-sm font-medium text-zinc-400">How this connects to the forecast</h2>
         <p className="text-sm text-zinc-300">
-          Our published forecast uses ATH windows and timeline phases that are informed by this cycle structure (e.g. halving→peak ~17–18 months). The scenario bands and checkpoints are not &quot;prediction from the table&quot;—they’re a framework. See the <Link href="/predictions" className="text-zinc-400 underline hover:text-white">Predictions</Link> page for the actual bands and timeline.
+          Our published forecast uses ATH windows and timeline phases that are informed by this cycle structure (e.g. halving→peak ~17–18 months). The scenario bands and checkpoints are not &quot;prediction from the table&quot;—they’re a framework. See the <Link href="/predictions" className="text-zinc-400 underline hover:text-white">Forecast Brief</Link> page for the actual bands and timeline.
         </p>
       </section>
       <section className="rounded-lg border border-zinc-700 bg-zinc-900/50 p-4">
