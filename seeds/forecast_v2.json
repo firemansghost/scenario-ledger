@@ -1,0 +1,80 @@
+{
+  "meta": {
+    "name": "Forecast v2 — Timeboxed 2026 + Outlook",
+    "asOf": "2026-02-09",
+    "timeZone": "America/Chicago",
+    "displayPreference": "SPX",
+    "equityInstrument": "SPY",
+    "spxToSpyFactor": 0.1,
+    "spxEqFormula": "spx_equiv = spy_close / spxToSpyFactor",
+    "spyApproxFormula": "spy_approx = spx_points * spxToSpyFactor",
+    "equityProxyNote": "Forecast S&P ranges are expressed as SPX points for readability; alignment uses SPY vs spyRangeApprox and displays SPX-equivalent (approx)."
+  },
+  "scoring": {
+    "priors": { "bull": 0.2, "base": 0.6, "bear": 0.2 },
+    "temperature": 1.4
+  },
+  "timeline": [
+    { "label": "2026", "bullets": ["Feb–Mar: Relief rally / lower high", "Apr–May: Retest / sweep risk", "Jun–Aug: Apathy / low vol grind", "Sep–Nov: Consolidation or final exam window", "Dec: Year-end pivot watch"] },
+    { "label": "2027", "bullets": ["H1: Expansion or consolidation", "H2: Pre-halving anticipation"] },
+    { "label": "2028+", "bullets": ["Expansion / pre-halving anticipation", "Risk: policy + liquidity regime shift"] }
+  ],
+  "timeline_by_year": [
+    { "label": "2026", "bullets": ["Feb–Mar: Relief rally / lower high", "Apr–May: Retest / sweep risk", "Jun–Aug: Apathy / low vol grind", "Sep–Nov: Consolidation or final exam window", "Dec: Year-end pivot watch"] },
+    { "label": "2027", "bullets": ["H1: Expansion or consolidation", "H2: Pre-halving anticipation"] },
+    { "label": "2028+", "bullets": ["Expansion / pre-halving anticipation", "Risk: policy + liquidity regime shift"] }
+  ],
+  "athWindows": [
+    { "key": "window_a", "label": "Window A", "displayRange": "Late 2026 → H2 2027" },
+    { "key": "window_b", "label": "Window B", "displayRange": "H2 2027 → H1 2028" },
+    { "key": "window_c", "label": "Window C", "displayRange": "Post-2028 halving → 2028–2029" }
+  ],
+  "rangeInterpretation": {
+    "method": "low-high-only",
+    "meaning": "Use low as conservative bound and high as stretch bound; display mid as midpoint unless explicit mid bands are provided."
+  },
+  "scenarios": {
+    "base": {
+      "label": "BASE (grind then pivot)",
+      "drivers": ["Restrictive-ish real yields through parts of 2026", "Midterm-year volatility / drawdown risk window", "No major systemic credit event", "Late-2026 into 2027 easing tailwind possible"],
+      "periods": [
+        { "label": "Spring 2026", "start": "2026-02-08", "end": "2026-05-31", "btcRangeUsd": { "low": 55000, "high": 90000 }, "spxRange": { "low": 5700, "high": 7600 }, "spyRangeApprox": { "low": 570, "high": 760 } },
+        { "label": "Summer 2026", "start": "2026-06-01", "end": "2026-08-31", "btcRangeUsd": { "low": 55000, "high": 90000 }, "spxRange": { "low": 5700, "high": 7600 }, "spyRangeApprox": { "low": 570, "high": 760 } },
+        { "label": "Fall 2026", "start": "2026-09-01", "end": "2026-11-30", "btcRangeUsd": { "low": 55000, "high": 90000 }, "spxRange": { "low": 5700, "high": 7600 }, "spyRangeApprox": { "low": 570, "high": 760 } },
+        { "label": "Winter 2026", "start": "2026-12-01", "end": "2026-12-31", "btcRangeUsd": { "low": 55000, "high": 90000 }, "spxRange": { "low": 5700, "high": 7600 }, "spyRangeApprox": { "low": 570, "high": 760 } },
+        { "label": "2027", "start": "2027-01-01", "end": "2027-12-31", "btcRangeUsd": { "low": 90000, "high": 160000 }, "spxRange": { "low": 6800, "high": 9200 }, "spyRangeApprox": { "low": 680, "high": 920 }, "notes": ["Equity range assumes earnings hold."] },
+        { "label": "2028+", "start": "2028-01-01", "end": "2029-12-31", "btcRangeUsd": { "low": 90000, "high": 160000 }, "spxRange": { "low": 6800, "high": 9200 }, "spyRangeApprox": { "low": 680, "high": 920 } }
+      ],
+      "checkpoints": ["Credit spreads stay contained (no sustained blowout)", "Real yields stop rising and/or roll over", "BTC stops making weekly lower lows"],
+      "invalidations": ["Credit spreads widen sharply and persist", "USD squeezes higher + real yields rise together", "BTC breaks down into persistent forced-selling regime"]
+    },
+    "bull": {
+      "label": "BULL (liquidity wins)",
+      "drivers": ["Real yields roll over", "Credit stays calm", "Earnings avoid recession hit", "Risk appetite returns; flows stabilize"],
+      "periods": [
+        { "label": "Spring 2026", "start": "2026-02-08", "end": "2026-05-31", "btcRangeUsd": { "low": 65000, "high": 110000 }, "spxRange": { "low": 6500, "high": 8000 }, "spyRangeApprox": { "low": 650, "high": 800 } },
+        { "label": "Summer 2026", "start": "2026-06-01", "end": "2026-08-31", "btcRangeUsd": { "low": 65000, "high": 110000 }, "spxRange": { "low": 6500, "high": 8000 }, "spyRangeApprox": { "low": 650, "high": 800 } },
+        { "label": "Fall 2026", "start": "2026-09-01", "end": "2026-11-30", "btcRangeUsd": { "low": 65000, "high": 110000 }, "spxRange": { "low": 6500, "high": 8000 }, "spyRangeApprox": { "low": 650, "high": 800 } },
+        { "label": "Winter 2026", "start": "2026-12-01", "end": "2026-12-31", "btcRangeUsd": { "low": 65000, "high": 110000 }, "spxRange": { "low": 6500, "high": 8000 }, "spyRangeApprox": { "low": 650, "high": 800 } },
+        { "label": "2027", "start": "2027-01-01", "end": "2027-12-31", "btcRangeUsd": { "low": 140000, "high": 250000 }, "spxRange": { "low": 8000, "high": 10000 }, "spyRangeApprox": { "low": 800, "high": 1000 }, "notes": ["New ATH possible under sustained risk-on regime."] },
+        { "label": "2028+", "start": "2028-01-01", "end": "2029-12-31", "btcRangeUsd": { "low": 140000, "high": 250000 }, "spxRange": { "low": 8000, "high": 10000 }, "spyRangeApprox": { "low": 800, "high": 1000 } }
+      ],
+      "checkpoints": ["VIX stays out of stress regime", "Credit spreads tighten or stay stable", "BTC reclaims key breakdown levels and holds weekly structure"],
+      "invalidations": ["Recessionary shock (earnings collapse)", "Credit spreads widen + volatility persists", "Major crypto deleveraging event hits late-cycle"]
+    },
+    "bear": {
+      "label": "BEAR (risk-off cascade)",
+      "drivers": ["Credit spreads widen fast", "Growth scare / recession risk", "USD up + real yields stay high", "Crypto forced deleveraging event"],
+      "periods": [
+        { "label": "Spring 2026", "start": "2026-02-08", "end": "2026-05-31", "btcRangeUsd": { "low": 35000, "high": 70000 }, "spxRange": { "low": 4900, "high": 6500 }, "spyRangeApprox": { "low": 490, "high": 650 } },
+        { "label": "Summer 2026", "start": "2026-06-01", "end": "2026-08-31", "btcRangeUsd": { "low": 35000, "high": 70000 }, "spxRange": { "low": 4900, "high": 6500 }, "spyRangeApprox": { "low": 490, "high": 650 } },
+        { "label": "Fall 2026", "start": "2026-09-01", "end": "2026-11-30", "btcRangeUsd": { "low": 35000, "high": 70000 }, "spxRange": { "low": 4900, "high": 6500 }, "spyRangeApprox": { "low": 490, "high": 650 } },
+        { "label": "Winter 2026", "start": "2026-12-01", "end": "2026-12-31", "btcRangeUsd": { "low": 35000, "high": 70000 }, "spxRange": { "low": 4900, "high": 6500 }, "spyRangeApprox": { "low": 490, "high": 650 } },
+        { "label": "2027", "start": "2027-01-01", "end": "2027-12-31", "btcRangeUsd": { "low": 60000, "high": 130000 }, "spxRange": { "low": 5800, "high": 7800 }, "spyRangeApprox": { "low": 580, "high": 780 }, "notes": ["Equities: earnings + multiples compress under bear."] },
+        { "label": "2028+", "start": "2028-01-01", "end": "2029-12-31", "btcRangeUsd": { "low": 60000, "high": 130000 }, "spxRange": { "low": 5800, "high": 7800 }, "spyRangeApprox": { "low": 580, "high": 780 } }
+      ],
+      "checkpoints": ["Watch spreads (HY OAS) for sustained widening", "Watch USD for squeeze behavior", "Watch BTC for repeated lower lows with weak rebounds"],
+      "invalidations": ["Spreads tighten + volatility normalizes", "USD weakens and stays weak", "BTC stops making lower lows and reclaims weekly structure"]
+    }
+  }
+}

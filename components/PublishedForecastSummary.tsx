@@ -1,11 +1,24 @@
 import Link from "next/link";
-import type { ForecastConfig, ScenarioKey } from "@/lib/types";
+import { derivePeriodLabel } from "@/lib/periodLabels";
+import type { ForecastConfig, PeriodBand, ScenarioKey } from "@/lib/types";
 
 interface PublishedForecastSummaryProps {
   config: ForecastConfig;
   version?: number;
   createdAt?: string | null;
   activeScenario?: ScenarioKey;
+}
+
+function TimeboxRow({ p }: { p: PeriodBand }) {
+  const label = derivePeriodLabel(p.start, p.end, p.label);
+  return (
+    <div className="flex flex-wrap items-baseline gap-x-2 text-sm">
+      <span className="font-medium text-zinc-300">{label}</span>
+      <span className="font-mono text-zinc-400">
+        BTC ${(p.btcRangeUsd.low / 1000).toFixed(0)}k–${(p.btcRangeUsd.high / 1000).toFixed(0)}k · SPX {p.spxRange.low}–{p.spxRange.high}
+      </span>
+    </div>
+  );
 }
 
 export function PublishedForecastSummary({
@@ -15,7 +28,7 @@ export function PublishedForecastSummary({
   activeScenario = "base",
 }: PublishedForecastSummaryProps) {
   const scenario = config.scenarios?.[activeScenario];
-  const firstPeriod = scenario?.periods?.[0];
+  const firstPeriods = (scenario?.periods ?? []).slice(0, 3);
   const athWindows = config.athWindows as
     | { key?: string; label?: string; displayRange?: string }[]
     | undefined;
@@ -46,14 +59,14 @@ export function PublishedForecastSummary({
         </div>
       )}
 
-      {firstPeriod && (
-        <div className="space-y-1">
-          <p className="text-sm text-zinc-400">Key bands (next period)</p>
-          <p className="font-mono text-sm text-zinc-300">
-            BTC: ${(firstPeriod.btcRangeUsd.low / 1000).toFixed(0)}k–$
-            {(firstPeriod.btcRangeUsd.high / 1000).toFixed(0)}k · SPX:{" "}
-            {firstPeriod.spxRange.low}–{firstPeriod.spxRange.high}
-          </p>
+      {firstPeriods.length > 0 && (
+        <div className="space-y-2">
+          <p className="text-sm text-zinc-400">Next timeboxes</p>
+          <div className="space-y-1">
+            {firstPeriods.map((p, i) => (
+              <TimeboxRow key={i} p={p} />
+            ))}
+          </div>
           <p className="text-xs text-zinc-600">
             Bands are envelopes, not targets. Edges count as &quot;in.&quot;
           </p>

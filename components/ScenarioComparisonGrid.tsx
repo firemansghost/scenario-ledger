@@ -1,4 +1,5 @@
 import React from "react";
+import { derivePeriodLabel } from "@/lib/periodLabels";
 import type { ForecastConfig, ScenarioKey } from "@/lib/types";
 
 interface ScenarioComparisonGridProps {
@@ -15,13 +16,10 @@ export function ScenarioComparisonGrid({ config }: ScenarioComparisonGridProps) 
   const scenarios = config.scenarios;
   if (!scenarios) return null;
 
-  const allPeriodLabels = new Set<string>();
-  for (const s of Object.values(scenarios)) {
-    for (const p of s?.periods ?? []) {
-      if (p?.label) allPeriodLabels.add(p.label);
-    }
-  }
-  const periodLabels = [...allPeriodLabels].sort();
+  const basePeriods = scenarios.base?.periods ?? [];
+  const maxPeriods = Math.max(
+    ...Object.values(scenarios).map((s) => (s?.periods?.length ?? 0))
+  );
 
   return (
     <div className="space-y-2">
@@ -38,17 +36,18 @@ export function ScenarioComparisonGrid({ config }: ScenarioComparisonGridProps) 
             </tr>
           </thead>
           <tbody>
-            {periodLabels.map((label) => {
-              const period = scenarios.base?.periods?.find((p) => p.label === label);
-              if (!period) return null;
+            {Array.from({ length: maxPeriods }, (_, i) => {
+              const p = basePeriods[i] ?? Object.values(scenarios).find((s) => (s?.periods?.length ?? 0) > i)?.periods?.[i];
+              const label = p
+                ? derivePeriodLabel(p.start, p.end, p.label)
+                : `Period ${i + 1}`;
               return (
-                <React.Fragment key={label}>
+                <React.Fragment key={i}>
                   <tr className="border-b border-zinc-800">
-                    <td className="p-2 font-medium text-zinc-300">{period.label}</td>
+                    <td className="p-2 font-medium text-zinc-300">{label}</td>
                     <td className="p-2 text-xs text-zinc-500">BTC</td>
                     {SCENARIOS.map(({ key }) => {
-                      const s = scenarios[key];
-                      const p = s?.periods?.find((x) => x.label === label);
+                      const p = scenarios[key]?.periods?.[i];
                       return (
                         <td key={key} className="p-2 font-mono text-zinc-300">
                           {p ? `$${(p.btcRangeUsd.low / 1000).toFixed(0)}k–$${(p.btcRangeUsd.high / 1000).toFixed(0)}k` : "—"}
@@ -56,12 +55,11 @@ export function ScenarioComparisonGrid({ config }: ScenarioComparisonGridProps) 
                       );
                     })}
                   </tr>
-                  <tr key={`${label}-spx`} className="border-b border-zinc-800">
+                  <tr className="border-b border-zinc-800">
                     <td className="p-2"></td>
                     <td className="p-2 text-xs text-zinc-500">SPX</td>
                     {SCENARIOS.map(({ key }) => {
-                      const s = scenarios[key];
-                      const p = s?.periods?.find((x) => x.label === label);
+                      const p = scenarios[key]?.periods?.[i];
                       return (
                         <td key={key} className="p-2 font-mono text-zinc-300">
                           {p ? `${p.spxRange.low}–${p.spxRange.high}` : "—"}

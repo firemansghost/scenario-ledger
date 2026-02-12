@@ -60,6 +60,28 @@ It exists so future-us doesn’t have to reverse engineer intent from commit mes
 
 ---
 
+## 025 — Forecasts stored in DB JSON, published via new versions
+- **Status:** Accepted  
+- **Date:** 2026-02-09  
+- **Context:** No `forecasts.config` file on disk; forecast config lives in Supabase `forecasts.config` (jsonb).  
+- **Choice:** Forecast config is JSON in the DB; we publish via `npm run forecast:publish` (reads seed JSON, inserts new row, deactivates prior active).  
+- **Rationale:** Immutability + audit trail; version history is explicit; no file sync issues.  
+- **Consequences:** Edits must be made to seed files; publishing requires running the script.  
+- **Follow-ups:** None.
+
+---
+
+## 026 — Timeboxed periods (seasonal / quarterly / yearly)
+- **Status:** Accepted  
+- **Date:** 2026-02-09  
+- **Context:** One giant "2026" band is vague; users want "when within the year."  
+- **Choice:** Replace single long periods with **timeboxed periods** (Spring/Summer/Fall/Winter, or quarters, or explicit years).  
+- **Rationale:** Readability; prevents vague year-wide bands; UI already supports derived labels (PR4).  
+- **Consequences:** Forecast v2+ uses timeboxed periods; alignment uses index-based period lookup.  
+- **Follow-ups:** None.
+
+---
+
 ## 005 — Evidence-first approach (“checkbox evidence”)
 - **Status:** Accepted  
 - **Date:** 2026-02-09  
