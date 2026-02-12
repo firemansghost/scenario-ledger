@@ -17,7 +17,8 @@ export interface PeriodBand {
   end: string;
   btcRangeUsd: { low: number; high: number };
   spxRange: { low: number; high: number };
-  spyRangeApprox: { low: number; high: number };
+  /** Optional: computed at snapshot time from spxRange * spx_factor when not in config */
+  spyRangeApprox?: { low: number; high: number };
   notes?: string[];
 }
 

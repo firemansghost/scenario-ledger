@@ -6,7 +6,8 @@
 import "./_env";
 import { createClient } from "@supabase/supabase-js";
 import { getMostRecentFriday, previousWeekEnding } from "../lib/dates";
-import { getDailyValue } from "../lib/overrides";
+import { getDailyValue, getLatestDailyValueOnOrBefore } from "../lib/overrides";
+import { computeSpxFactor } from "../lib/equityProxy";
 import { runAllIndicators } from "../lib/indicators";
 import { computeScoring } from "../lib/scoring";
 import { computeAlignment } from "../lib/alignment";
@@ -29,6 +30,9 @@ async function runWeekly(supabase: ReturnType<typeof createServiceRoleClient>, w
 
   const btc_close = await getDailyValue(supabase, "btc_usd", weekEnding);
   const spy_close = await getDailyValue(supabase, "spy", weekEnding);
+  const spx_close = await getLatestDailyValueOnOrBefore(supabase, "spx", weekEnding);
+  const spx_factor_computed =
+    spy_close != null && spx_close != null ? computeSpxFactor(spy_close, spx_close) : null;
   const indicatorOutputs = await runAllIndicators(supabase, weekEnding);
 
   for (const row of indicatorOutputs) {
@@ -69,6 +73,7 @@ async function runWeekly(supabase: ReturnType<typeof createServiceRoleClient>, w
     weekEnding,
     btcClose: btc_close ?? null,
     spyClose: spy_close ?? null,
+    spxFactor: spx_factor_computed,
   });
 
   await supabase.from("weekly_snapshots").upsert(
@@ -78,7 +83,7 @@ async function runWeekly(supabase: ReturnType<typeof createServiceRoleClient>, w
       btc_close: btc_close ?? null,
       spy_close: spy_close ?? null,
       spx_equiv: spx_equiv ?? null,
-      spx_factor,
+      spx_factor: spx_factor ?? null,
       scenario_scores: scoringResult.scenario_scores,
       scenario_probs: scoringResult.scenario_probs,
       active_scenario: scoringResult.active_scenario,

@@ -1,6 +1,7 @@
 import { createServiceRoleClient } from "@/lib/supabaseServer";
 import { getMostRecentFriday } from "@/lib/dates";
-import { getDailyValue } from "@/lib/overrides";
+import { getDailyValue, getLatestDailyValueOnOrBefore } from "@/lib/overrides";
+import { computeSpxFactor } from "@/lib/equityProxy";
 import { runAllIndicators } from "@/lib/indicators";
 import { computeScoring } from "@/lib/scoring";
 import { computeAlignment } from "@/lib/alignment";
@@ -26,6 +27,12 @@ export async function runWeeklyPipeline(weekEnding?: string): Promise<WeeklyPipe
 
   const btc_close = await getDailyValue(supabase, "btc_usd", we);
   const spy_close = await getDailyValue(supabase, "spy", we);
+  const spx_close = await getLatestDailyValueOnOrBefore(supabase, "spx", we);
+  const spx_factor_computed =
+    spy_close != null && spx_close != null ? computeSpxFactor(spy_close, spx_close) : null;
+  if (spy_close != null && spx_close == null) {
+    console.warn(`[weekly] Missing SPX close for week_ending ${we}; cannot compute factor. Using fallback from config if available.`);
+  }
   const indicatorOutputs = await runAllIndicators(supabase, we);
 
   for (const row of indicatorOutputs) {
@@ -67,6 +74,7 @@ export async function runWeeklyPipeline(weekEnding?: string): Promise<WeeklyPipe
     weekEnding: we,
     btcClose: btc_close ?? null,
     spyClose: spy_close ?? null,
+    spxFactor: spx_factor_computed,
   });
 
   await supabase.from("weekly_snapshots").upsert(
@@ -76,7 +84,7 @@ export async function runWeeklyPipeline(weekEnding?: string): Promise<WeeklyPipe
       btc_close: btc_close ?? null,
       spy_close: spy_close ?? null,
       spx_equiv: spx_equiv ?? null,
-      spx_factor,
+      spx_factor: spx_factor ?? null,
       scenario_scores: scoringResult.scenario_scores,
       scenario_probs: scoringResult.scenario_probs,
       active_scenario: scoringResult.active_scenario,

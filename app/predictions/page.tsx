@@ -19,13 +19,13 @@ export default async function PredictionsPage() {
 
   const { data: snapshot } = await supabase
     .from("weekly_snapshots")
-    .select("week_ending, alignment, btc_close, spy_close, spx_equiv, active_scenario")
+    .select("week_ending, alignment, btc_close, spy_close, spx_equiv, spx_factor, active_scenario")
     .order("week_ending", { ascending: false })
     .limit(1)
     .maybeSingle();
 
   const config = forecast?.config as ForecastConfig | null;
-  const factor = config?.meta?.spxToSpyFactor ?? 0.1;
+  const factor = snapshot?.spx_factor ?? config?.meta?.spxToSpyFactor ?? 0.1;
 
   const activeScenario = (snapshot?.active_scenario as ScenarioKey) ?? "base";
 

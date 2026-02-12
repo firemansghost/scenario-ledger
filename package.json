@@ -13,6 +13,7 @@
     "backfill:spy-history": "tsx scripts/backfill-spy-history.ts",
     "backfill:spx-history": "tsx scripts/backfill-spx-history.ts",
     "backfill:btc-history": "tsx scripts/backfill-btc-history.ts",
+    "backfill:snapshot-factors": "tsx scripts/backfill-snapshot-factors.ts",
     "history:build": "tsx scripts/build-history-rollups.ts",
     "test": "vitest run",
     "test:watch": "vitest"

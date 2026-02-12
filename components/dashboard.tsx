@@ -67,7 +67,7 @@ export async function Dashboard(props: { shareMode?: boolean; nerdMode?: boolean
     ? await supabase.from("forecasts").select("config, version, created_at").eq("id", snapshot.forecast_id).single()
     : { data: null };
 
-  const spxFactor = (forecast?.config as { meta?: { spxToSpyFactor?: number } })?.meta?.spxToSpyFactor ?? 0.1;
+  const spxFactor = snapshot?.spx_factor ?? (forecast?.config as { meta?: { spxToSpyFactor?: number } })?.meta?.spxToSpyFactor ?? 0.1;
   const forecastVersion = forecast?.version ?? null;
   const defMap = Object.fromEntries(evidence.definitions.map((d) => [d.key, d.name]));
   const evidenceSummaryLines = evidence.indicatorRows.slice(0, 3).map(

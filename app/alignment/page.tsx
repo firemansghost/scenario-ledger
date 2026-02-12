@@ -14,7 +14,7 @@ export default async function AlignmentPage() {
   const supabase = createClient();
   const { data: snapshots } = await supabase
     .from("weekly_snapshots")
-    .select("week_ending, alignment, spx_equiv, spy_close, btc_close")
+    .select("week_ending, alignment, spx_equiv, spy_close, btc_close, spx_factor")
     .order("week_ending", { ascending: true });
 
   const { data: forecast } = await supabase
@@ -23,10 +23,9 @@ export default async function AlignmentPage() {
     .eq("is_active", true)
     .single();
 
-  const config = forecast?.config as { meta?: { spxToSpyFactor?: number } } | null;
-  const factor = config?.meta?.spxToSpyFactor ?? 0.1;
-
   const latest = snapshots?.length ? snapshots[snapshots.length - 1] : null;
+  const factor = latest?.spx_factor ?? (forecast?.config as { meta?: { spxToSpyFactor?: number } })?.meta?.spxToSpyFactor ?? 0.1;
+
   const align = (latest?.alignment as Record<string, AlignRow> | undefined) ?? {};
   const last8 = (snapshots ?? []).slice(-8).reverse();
 
@@ -44,7 +43,7 @@ export default async function AlignmentPage() {
       <MissionBanner />
       <h1 className="text-xl font-semibold">Alignment</h1>
       <p className="text-sm text-zinc-400">
-        Alignment uses SPY price vs forecast bands. Drift = % outside band. BTC and SPY by week.
+        Equity drift uses SPY vs SPY-approx band (derived from SPX band using that week&apos;s factor). Drift = % outside band. BTC and SPY by week.
       </p>
       {snapshots && snapshots.length > 0 ? (
         <>
