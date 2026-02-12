@@ -34,14 +34,15 @@ export function ThisWeekVsForecast({ snapshot, factor }: ThisWeekVsForecastProps
   return (
     <div className="space-y-3">
       <h2 className="text-lg font-medium">This week vs forecast</h2>
-      <p className="text-sm text-zinc-500">Week ending {snapshot.week_ending}</p>
+      <p className="text-sm text-zinc-500">In/Out is vs the published band for that timebox.</p>
+      <p className="text-xs text-zinc-500">Week ending {snapshot.week_ending}</p>
       <div className="overflow-x-auto rounded-lg border border-zinc-800">
         <table className="w-full text-left text-sm">
           <thead>
             <tr className="border-b border-zinc-700 bg-zinc-900/50">
               <th className="p-2 font-medium">Scenario</th>
-              <th className="p-2 font-medium">BTC close</th>
-              <th className="p-2 font-medium">SPY close</th>
+              <th className="p-2 font-medium">BTC vs band</th>
+              <th className="p-2 font-medium">Equity vs band</th>
             </tr>
           </thead>
           <tbody>

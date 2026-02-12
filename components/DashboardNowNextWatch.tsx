@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { derivePeriodLabel } from "@/lib/periodLabels";
+import { TimeboxProgress } from "@/components/TimeboxProgress";
 import type { ForecastConfig, PeriodBand, ScenarioKey } from "@/lib/types";
 import type { TopContributor } from "@/lib/types";
 
@@ -99,6 +100,11 @@ export function DashboardNowNextWatch({
             <p className="font-medium text-zinc-300">
               {derivePeriodLabel(currentPeriod.start, currentPeriod.end, currentPeriod.label)}
             </p>
+            <TimeboxProgress
+              start={currentPeriod.start}
+              end={currentPeriod.end}
+              now={new Date()}
+            />
             <p className="font-mono text-sm text-zinc-400">
               BTC ${(currentPeriod.btcRangeUsd.low / 1000).toFixed(0)}k–${(currentPeriod.btcRangeUsd.high / 1000).toFixed(0)}k · SPX {currentPeriod.spxRange.low}–{currentPeriod.spxRange.high}
             </p>

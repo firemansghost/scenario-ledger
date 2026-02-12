@@ -53,10 +53,11 @@ export async function Dashboard(props: { shareMode?: boolean; nerdMode?: boolean
     .from("weekly_snapshots")
     .select("*")
     .order("week_ending", { ascending: false })
-    .limit(2);
+    .limit(9);
 
   const snapshot = snapshots?.[0] ?? null;
   const prevSnapshot = snapshots?.[1] ?? null;
+  const snapshotsForSparkline = (snapshots ?? []).slice(0, 8).reverse();
 
   const [dataHealth, evidence] = await Promise.all([
     getDataHealth(supabaseService),
@@ -124,10 +125,12 @@ export async function Dashboard(props: { shareMode?: boolean; nerdMode?: boolean
               alignment={align}
               activeScenarioKey={activeScenarioKey ?? "base"}
               weekEnding={snapshot.week_ending}
+              snapshotsForSparkline={snapshotsForSparkline}
             />
             <ScenarioProbChips
               scenarioProbs={(snapshot.scenario_probs as Record<ScenarioKey, number>) ?? {}}
               prevScenarioProbs={prevSnapshot ? (prevSnapshot.scenario_probs as Record<ScenarioKey, number>) : null}
+              snapshotsForSparkline={snapshotsForSparkline}
             />
           </div>
           {evidenceSummaryLines.length > 0 && (

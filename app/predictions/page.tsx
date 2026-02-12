@@ -2,11 +2,12 @@ import { createClient } from "@/lib/supabaseClient";
 import { MissionBanner } from "@/components/MissionBanner";
 import { ForecastAtAGlance } from "@/components/ForecastAtAGlance";
 import { NearTermMap } from "@/components/NearTermMap";
+import { PredictionsAtAGlanceStrip } from "@/components/PredictionsAtAGlanceStrip";
 import { PublishedForecastSummary } from "@/components/PublishedForecastSummary";
 import { ScenarioComparisonGrid } from "@/components/ScenarioComparisonGrid";
 import { ThisWeekVsForecast } from "@/components/ThisWeekVsForecast";
 import { TripwiresSection } from "@/components/TripwiresSection";
-import type { ForecastConfig, ScenarioKey } from "@/lib/types";
+import type { ForecastConfig, PeriodBand, ScenarioKey } from "@/lib/types";
 
 export const revalidate = 60;
 
@@ -25,6 +26,20 @@ function findCurrentPeriodIndex(
   return 0;
 }
 
+function findCurrentPeriod(
+  periods: PeriodBand[],
+  weekEnding: string
+): PeriodBand | null {
+  if (!periods?.length) return null;
+  const we = new Date(weekEnding).getTime();
+  for (const p of periods) {
+    if (we >= new Date(p.start).getTime() && we <= new Date(p.end).getTime()) {
+      return p;
+    }
+  }
+  return periods[0] ?? null;
+}
+
 export default async function PredictionsPage() {
   const supabase = createClient();
   const { data: forecast } = await supabase
@@ -33,12 +48,14 @@ export default async function PredictionsPage() {
     .eq("is_active", true)
     .maybeSingle();
 
-  const { data: snapshot } = await supabase
+  const { data: snapshots } = await supabase
     .from("weekly_snapshots")
     .select("week_ending, alignment, btc_close, spy_close, spx_equiv, spx_factor, active_scenario")
     .order("week_ending", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+    .limit(8);
+
+  const snapshot = snapshots?.[0] ?? null;
+  const snapshotsForSparkline = (snapshots ?? []).slice(0, 8).reverse();
 
   const config = forecast?.config as ForecastConfig | null;
   const factor = snapshot?.spx_factor ?? config?.meta?.spxToSpyFactor ?? 0.1;
@@ -49,6 +66,7 @@ export default async function PredictionsPage() {
   const scenario = config?.scenarios?.[activeScenario];
   const checkpoints = scenario?.checkpoints ?? [];
   const invalidations = scenario?.invalidations ?? [];
+  const currentPeriod = findCurrentPeriod(periods, snapshot?.week_ending ?? "");
 
   return (
     <div className="space-y-6">
@@ -68,6 +86,13 @@ export default async function PredictionsPage() {
             />
             <NearTermMap config={config} activeScenario={activeScenario} maxBullets={6} />
           </div>
+          <PredictionsAtAGlanceStrip
+            currentPeriod={currentPeriod}
+            activeScenario={activeScenario}
+            snapshotsForSparkline={snapshotsForSparkline}
+            checkpointsCount={checkpoints.length}
+            invalidationsCount={invalidations.length}
+          />
           {snapshot && (
             <section id="this-week" className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-4">
               <ThisWeekVsForecast snapshot={snapshot} factor={factor} />

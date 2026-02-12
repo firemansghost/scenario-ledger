@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { MiniSparkline } from "@/components/MiniSparkline";
 import type { ScenarioKey } from "@/lib/types";
 
 type AlignRow = {
@@ -6,10 +7,16 @@ type AlignRow = {
   spy?: { inBand: boolean; driftPct?: number };
 };
 
+type SnapshotForSparkline = {
+  alignment?: Record<string, AlignRow | undefined>;
+};
+
 interface DashboardAlignmentTilesProps {
   alignment: Record<string, AlignRow | undefined>;
   activeScenarioKey: ScenarioKey;
   weekEnding: string;
+  /** Last 8 snapshots (oldest first) for sparklines */
+  snapshotsForSparkline?: SnapshotForSparkline[];
 }
 
 function DriftDisplay({ inBand, driftPct }: { inBand: boolean; driftPct?: number }) {
@@ -21,14 +28,29 @@ function DriftDisplay({ inBand, driftPct }: { inBand: boolean; driftPct?: number
   return <span className="text-zinc-500">—</span>;
 }
 
+function getDriftValue(row: AlignRow | undefined, key: "btc" | "spy"): number | null {
+  const cell = row?.[key];
+  if (!cell) return null;
+  if (cell.inBand) return 0;
+  return cell.driftPct ?? null;
+}
+
 export function DashboardAlignmentTiles({
   alignment,
   activeScenarioKey,
   weekEnding,
+  snapshotsForSparkline = [],
 }: DashboardAlignmentTilesProps) {
-  const activeAlign = alignment[activeScenarioKey];
+  const activeAlign = alignment[activeScenarioKey] ?? alignment["base"];
   const btcIn = activeAlign?.btc?.inBand ?? false;
   const spyIn = activeAlign?.spy?.inBand ?? false;
+
+  const btcDriftSeries = snapshotsForSparkline
+    .map((s) => getDriftValue(s.alignment?.[activeScenarioKey] ?? s.alignment?.["base"], "btc"))
+    .filter((v): v is number => v != null);
+  const spyDriftSeries = snapshotsForSparkline
+    .map((s) => getDriftValue(s.alignment?.[activeScenarioKey] ?? s.alignment?.["base"], "spy"))
+    .filter((v): v is number => v != null);
 
   return (
     <div className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-4">
@@ -44,6 +66,11 @@ export function DashboardAlignmentTiles({
         >
           <p className="mb-1 text-xs font-medium text-zinc-400">BTC</p>
           <DriftDisplay inBand={btcIn} driftPct={activeAlign?.btc?.driftPct} />
+          {btcDriftSeries.length >= 2 && (
+            <div className="mt-2">
+              <MiniSparkline values={btcDriftSeries} width={60} height={16} strokeClassName="stroke-amber-400/80" />
+            </div>
+          )}
         </Link>
         <Link
           href="/alignment"
@@ -51,6 +78,11 @@ export function DashboardAlignmentTiles({
         >
           <p className="mb-1 text-xs font-medium text-zinc-400">Equity</p>
           <DriftDisplay inBand={spyIn} driftPct={activeAlign?.spy?.driftPct} />
+          {spyDriftSeries.length >= 2 && (
+            <div className="mt-2">
+              <MiniSparkline values={spyDriftSeries} width={60} height={16} strokeClassName="stroke-amber-400/80" />
+            </div>
+          )}
         </Link>
       </div>
     </div>
