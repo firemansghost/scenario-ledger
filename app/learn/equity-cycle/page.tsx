@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabaseClient";
-import { MissionBanner } from "@/components/MissionBanner";
 import { EquityCycleDataCoverage, type EquityRollupMeta } from "@/components/learn/EquityCycleDataCoverage";
 import { SpyCycleCharts, type SpyPresidentialRollup } from "@/components/learn/SpyCycleCharts";
 
@@ -39,7 +38,6 @@ export default async function EquityCyclePage() {
 
   return (
     <div className="space-y-6">
-      <MissionBanner />
       <Link href="/learn" className="text-sm text-zinc-500 hover:text-white">← Start here</Link>
       <h1 className="text-xl font-semibold">
         Equity 4-year cycle (presidential cycle on {seriesUsed === "spx" ? "SPX" : "SPY"})

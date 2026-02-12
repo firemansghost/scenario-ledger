@@ -1,5 +1,4 @@
 import { createClient } from "@/lib/supabaseClient";
-import { MissionBanner } from "@/components/MissionBanner";
 import { ForecastAtAGlance } from "@/components/ForecastAtAGlance";
 import { NearTermMap } from "@/components/NearTermMap";
 import { PredictionsAtAGlanceStrip } from "@/components/PredictionsAtAGlanceStrip";
@@ -70,7 +69,6 @@ export default async function PredictionsPage() {
 
   return (
     <div className="space-y-6">
-      <MissionBanner />
       <h1 className="text-xl font-semibold">Predictions</h1>
       <p className="text-sm text-zinc-400">
         What we published: active forecast and how this week lines up.

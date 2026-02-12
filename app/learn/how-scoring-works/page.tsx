@@ -1,12 +1,10 @@
 import Link from "next/link";
-import { MissionBanner } from "@/components/MissionBanner";
 
 export const revalidate = 60;
 
 export default function HowScoringWorksPage() {
   return (
     <div className="space-y-6">
-      <MissionBanner />
       <div className="flex items-center gap-2">
         <Link href="/learn" className="text-sm text-zinc-500 hover:text-white">← Start here</Link>
       </div>

@@ -1,12 +1,10 @@
 import Link from "next/link";
-import { MissionBanner } from "@/components/MissionBanner";
 
 export const revalidate = 60;
 
 export default function LearnPage() {
   return (
     <div className="space-y-6">
-      <MissionBanner />
       <h1 className="text-xl font-semibold">Learn</h1>
       <p className="text-sm text-zinc-400">Explainer hub: how to read the app and where the forecast comes from.</p>
       <div className="grid gap-4 sm:grid-cols-2">

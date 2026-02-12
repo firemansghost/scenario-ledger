@@ -38,6 +38,9 @@ export default function RootLayout({
             </Suspense>
           </header>
           <main>{children}</main>
+          <footer className="mt-12 border-t border-zinc-800 pt-4 text-center text-xs text-zinc-500">
+            Educational speculation. Not investment advice.
+          </footer>
         </div>
       </body>
     </html>

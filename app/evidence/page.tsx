@@ -1,6 +1,5 @@
 import { createClient } from "@/lib/supabaseClient";
 import { EvidenceTable } from "@/components/evidence-table";
-import { MissionBanner } from "@/components/MissionBanner";
 
 export const revalidate = 60;
 
@@ -29,7 +28,6 @@ export default async function EvidencePage() {
 
   return (
     <div className="space-y-6">
-      <MissionBanner />
       <h1 className="text-xl font-semibold">Evidence</h1>
       {weekEnding ? (
         <>
