@@ -4,6 +4,7 @@ import type { ForecastConfig, ScenarioKey } from "@/lib/types";
 
 interface ScenarioComparisonGridProps {
   config: ForecastConfig;
+  currentPeriodIndex?: number;
 }
 
 const SCENARIOS: { key: ScenarioKey; label: string }[] = [
@@ -12,7 +13,7 @@ const SCENARIOS: { key: ScenarioKey; label: string }[] = [
   { key: "bear", label: "Bear" },
 ];
 
-export function ScenarioComparisonGrid({ config }: ScenarioComparisonGridProps) {
+export function ScenarioComparisonGrid({ config, currentPeriodIndex }: ScenarioComparisonGridProps) {
   const scenarios = config.scenarios;
   if (!scenarios) return null;
 
@@ -41,10 +42,16 @@ export function ScenarioComparisonGrid({ config }: ScenarioComparisonGridProps) 
               const label = p
                 ? derivePeriodLabel(p.start, p.end, p.label)
                 : `Period ${i + 1}`;
+              const isCurrent = i === currentPeriodIndex;
               return (
                 <React.Fragment key={i}>
-                  <tr className="border-b border-zinc-800">
-                    <td className="p-2 font-medium text-zinc-300">{label}</td>
+                  <tr className={`border-b border-zinc-800 ${isCurrent ? "bg-amber-950/30" : ""}`}>
+                    <td className="p-2 font-medium text-zinc-300">
+                      {label}
+                      {isCurrent && (
+                        <span className="ml-1.5 rounded bg-amber-600/50 px-1.5 py-0.5 text-xs font-medium text-amber-200">Current</span>
+                      )}
+                    </td>
                     <td className="p-2 text-xs text-zinc-500">BTC</td>
                     {SCENARIOS.map(({ key }) => {
                       const p = scenarios[key]?.periods?.[i];
@@ -55,7 +62,7 @@ export function ScenarioComparisonGrid({ config }: ScenarioComparisonGridProps) 
                       );
                     })}
                   </tr>
-                  <tr className="border-b border-zinc-800">
+                  <tr className={`border-b border-zinc-800 ${isCurrent ? "bg-amber-950/30" : ""}`}>
                     <td className="p-2"></td>
                     <td className="p-2 text-xs text-zinc-500">SPX</td>
                     {SCENARIOS.map(({ key }) => {

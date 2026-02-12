@@ -76,6 +76,30 @@ export function PublishedForecastSummary({
         </div>
       )}
 
+      {scenario && (scenario.checkpoints?.length > 0 || scenario.invalidations?.length > 0) && (
+        <div className="space-y-2">
+          <p className="text-sm text-zinc-400">Tripwires (preview)</p>
+          <p className="text-xs text-zinc-500">
+            Checkpoints = signs we&apos;re on track. Invalidations = signs we&apos;re wrong.
+          </p>
+          <div className="grid gap-4 text-sm md:grid-cols-2">
+            <ul className="list-disc space-y-0.5 pl-4 text-zinc-400">
+              {(scenario.checkpoints ?? []).slice(0, 3).map((c, i) => (
+                <li key={i}>{c}</li>
+              ))}
+            </ul>
+            <ul className="list-disc space-y-0.5 pl-4 text-zinc-400">
+              {(scenario.invalidations ?? []).slice(0, 3).map((inv, i) => (
+                <li key={i}>{inv}</li>
+              ))}
+            </ul>
+          </div>
+          <Link href="#tripwires" className="text-xs text-zinc-500 underline hover:text-zinc-300">
+            Jump to full checklist
+          </Link>
+        </div>
+      )}
+
       {(athWindows?.length ?? 0) > 0 && (
         <div className="space-y-1">
           <p className="text-sm text-zinc-400">ATH windows</p>

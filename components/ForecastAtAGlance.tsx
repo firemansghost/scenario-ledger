@@ -8,6 +8,7 @@ interface ForecastAtAGlanceProps {
   config: ForecastConfig;
   forecastName?: string;
   version?: number;
+  currentPeriodIndex?: number;
 }
 
 const SCENARIOS: { key: ScenarioKey; label: string }[] = [
@@ -30,11 +31,17 @@ function getTimelineForScenario(
   return (scenarioTimeline ?? configTimeline) ?? [];
 }
 
-function PeriodBlock({ p }: { p: PeriodBand }) {
+function PeriodBlock({ p, isCurrent }: { p: PeriodBand; isCurrent?: boolean }) {
   const label = derivePeriodLabel(p.start, p.end, p.label);
   return (
-    <div className="rounded border border-zinc-700 p-2 text-sm">
-      <span className="font-medium text-zinc-300">{label}</span> {p.start} → {p.end}
+    <div className={`rounded border p-2 text-sm ${isCurrent ? "border-amber-500/70 bg-amber-950/30" : "border-zinc-700"}`}>
+      <div className="flex items-center gap-2">
+        <span className="font-medium text-zinc-300">{label}</span>
+        {isCurrent && (
+          <span className="rounded bg-amber-600/50 px-1.5 py-0.5 text-xs font-medium text-amber-200">Current</span>
+        )}
+      </div>
+      <span className="text-zinc-500"> {p.start} → {p.end}</span>
       <div className="mt-1 text-zinc-400">
         BTC: ${(p.btcRangeUsd.low / 1000).toFixed(0)}k–${(p.btcRangeUsd.high / 1000).toFixed(0)}k · SPX: {p.spxRange.low}–{p.spxRange.high}
       </div>
@@ -86,7 +93,7 @@ function SeasonalBreakdown({
   );
 }
 
-export function ForecastAtAGlance({ config, forecastName, version }: ForecastAtAGlanceProps) {
+export function ForecastAtAGlance({ config, forecastName, version, currentPeriodIndex }: ForecastAtAGlanceProps) {
   const [tab, setTab] = useState<ScenarioKey>("base");
   const scenario = config.scenarios?.[tab];
   const timeline = config.timeline ?? config.timeline_by_year;
@@ -118,7 +125,7 @@ export function ForecastAtAGlance({ config, forecastName, version }: ForecastAtA
           <section>
             <h3 className="mb-2 text-sm font-medium text-zinc-400">Period bands</h3>
             <p className="mb-2 text-xs text-zinc-500">These are wide on purpose. Use checkpoints + invalidations to track the path.</p>
-            <div className="space-y-2">{(scenario.periods ?? []).map((p, i) => <PeriodBlock key={i} p={p} />)}</div>
+            <div className="space-y-2">{(scenario.periods ?? []).map((p, i) => <PeriodBlock key={i} p={p} isCurrent={i === currentPeriodIndex} />)}</div>
             {isLongSingleYearPeriod(scenario.periods ?? []) && (() => {
               const firstPeriod = scenario.periods![0];
               const year = new Date(firstPeriod.start).getFullYear();
