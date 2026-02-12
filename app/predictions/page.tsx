@@ -69,7 +69,7 @@ export default async function PredictionsPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-xl font-semibold">Predictions</h1>
+      <h1 className="text-xl font-semibold">Forecast Brief</h1>
       <p className="text-sm text-zinc-400">
         What we published: active forecast and how this week lines up.
       </p>

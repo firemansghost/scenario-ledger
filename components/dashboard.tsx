@@ -10,11 +10,13 @@ import { DashboardAlignmentTiles } from "@/components/DashboardAlignmentTiles";
 import { ScenarioProbChips } from "@/components/ScenarioProbChips";
 import { DataHealthCard } from "@/components/DataHealthCard";
 import { DataStatusBadge } from "@/components/data-status-badge";
-import { HowToRead } from "@/components/HowToRead";
 import { ReceiptsPanel } from "@/components/ReceiptsPanel";
 import { DashboardIntro } from "@/components/DashboardIntro";
+import { NewSinceLastVisitCard } from "@/components/NewSinceLastVisitCard";
 import { WeeklyBriefCard } from "@/components/WeeklyBriefCard";
 import type { ForecastConfig, ScenarioKey } from "@/lib/types";
+
+type AlignRecord = Record<string, { btc?: { inBand: boolean; driftPct?: number }; spy?: { inBand: boolean; driftPct?: number } } | undefined>;
 
 function buildCopySummaryText(params: {
   weekEnding: string;
@@ -76,12 +78,13 @@ export async function Dashboard(props: { shareMode?: boolean; nerdMode?: boolean
     snapshot
       ? supabase.from("forecasts").select("config, version, created_at").eq("id", snapshot.forecast_id).single()
       : Promise.resolve({ data: null }),
-    supabase.from("forecasts").select("id, version").eq("is_active", true).maybeSingle(),
+    supabase.from("forecasts").select("id, version, config, created_at").eq("is_active", true).maybeSingle(),
   ]);
 
   const forecast = forecastResult.data;
   const activeForecast = activeForecastResult.data;
   const forecastVersion = forecast?.version ?? null;
+  const activeForecastConfig = (activeForecast?.config ?? forecast?.config) as ForecastConfig | null;
   const computedOnForecastVersion = forecast?.version ?? null;
   const activeForecastVersion =
     activeForecast && snapshot && activeForecast.id !== snapshot.forecast_id
@@ -104,14 +107,40 @@ export async function Dashboard(props: { shareMode?: boolean; nerdMode?: boolean
         })
       : "";
 
-  const config = forecast?.config as ForecastConfig | null;
+  const config = activeForecastConfig;
   const activeScenarioKey = snapshot?.active_scenario as ScenarioKey | undefined;
   const align = (snapshot?.alignment as Record<string, { btc?: { inBand: boolean; driftPct?: number }; spy?: { inBand: boolean; driftPct?: number } } | undefined>) ?? {};
 
   const defsByKey = Object.fromEntries(evidence.definitions.map((d) => [d.key, d.name]));
-  const scenarioConfig = activeScenarioKey && config?.scenarios?.[activeScenarioKey]
-    ? { checkpoints: config.scenarios[activeScenarioKey].checkpoints ?? [], invalidations: config.scenarios[activeScenarioKey].invalidations ?? [] }
+  const forecastConfigForBrief = (forecast?.config as ForecastConfig | null) ?? null;
+  const scenarioConfig = activeScenarioKey && forecastConfigForBrief?.scenarios?.[activeScenarioKey]
+    ? { checkpoints: forecastConfigForBrief.scenarios[activeScenarioKey].checkpoints ?? [], invalidations: forecastConfigForBrief.scenarios[activeScenarioKey].invalidations ?? [] }
     : undefined;
+
+  const prevTopContributors = prevSnapshot?.top_contributors ?? [];
+  const latestTopContributors = snapshot?.top_contributors ?? [];
+
+  const prevForNewCard = prevSnapshot
+    ? {
+        week_ending: prevSnapshot.week_ending,
+        active_scenario: (prevSnapshot.active_scenario as ScenarioKey) ?? "base",
+        confidence: prevSnapshot.confidence,
+        scenario_probs: (prevSnapshot.scenario_probs as Record<ScenarioKey, number>) ?? {},
+        alignment: prevSnapshot.alignment as AlignRecord,
+        top_contributors: prevTopContributors,
+      }
+    : null;
+
+  const latestForNewCard = snapshot
+    ? {
+        week_ending: snapshot.week_ending,
+        active_scenario: (snapshot.active_scenario as ScenarioKey) ?? "base",
+        confidence: snapshot.confidence,
+        scenario_probs: (snapshot.scenario_probs as Record<ScenarioKey, number>) ?? {},
+        alignment: snapshot.alignment as AlignRecord,
+        top_contributors: latestTopContributors,
+      }
+    : null;
 
   const weeklyBrief = snapshot
     ? buildWeeklyBrief({
@@ -144,7 +173,6 @@ export async function Dashboard(props: { shareMode?: boolean; nerdMode?: boolean
 
   return (
     <div className="space-y-6">
-      <HowToRead defaultExpanded={shareMode} />
       {snapshot ? (
         <>
           {shareMode && (
@@ -156,6 +184,17 @@ export async function Dashboard(props: { shareMode?: boolean; nerdMode?: boolean
           {weeklyBrief && (
             <WeeklyBriefCard brief={weeklyBrief} shareMode={shareMode} />
           )}
+          {!shareMode && prevSnapshot && prevForNewCard && latestForNewCard && (
+            <NewSinceLastVisitCard
+              latestWeekEnding={String(snapshot.week_ending)}
+              prevSnapshot={prevForNewCard}
+              latestSnapshot={latestForNewCard}
+              indicatorLatest={evidence.indicatorRows}
+              indicatorPrev={prevEvidence.indicatorRows}
+              defsByKey={defsByKey}
+              shareMode={shareMode}
+            />
+          )}
           <DashboardIntro shareMode={shareMode} />
           {config && activeScenarioKey && (
             <DashboardNowNextWatch
@@ -166,11 +205,12 @@ export async function Dashboard(props: { shareMode?: boolean; nerdMode?: boolean
                 top_contributors: snapshot.top_contributors ?? [],
               }}
               forecastConfig={config}
-              forecastVersion={forecastVersion}
-              createdAt={forecast?.created_at ?? null}
+              forecastVersion={activeForecast?.version ?? forecastVersion}
+              createdAt={activeForecast?.created_at ?? forecast?.created_at ?? null}
               activeScenarioKey={activeScenarioKey}
               shareMode={shareMode}
               nerdMode={nerdMode}
+              defsByKey={defsByKey}
             />
           )}
           <div className="grid gap-6 md:grid-cols-2">
@@ -179,6 +219,7 @@ export async function Dashboard(props: { shareMode?: boolean; nerdMode?: boolean
               activeScenarioKey={activeScenarioKey ?? "base"}
               weekEnding={snapshot.week_ending}
               snapshotsForSparkline={snapshotsForSparkline}
+              nerdMode={nerdMode}
             />
             <ScenarioProbChips
               scenarioProbs={(snapshot.scenario_probs as Record<ScenarioKey, number>) ?? {}}
