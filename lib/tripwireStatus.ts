@@ -3,6 +3,7 @@
  * Heuristic, transparent, not auto-verified. Uses alignment + evidence only.
  */
 
+import { computeSupportDelta } from "./evidenceSupport";
 import type { ScenarioKey } from "./types";
 
 export type TripwireKind = "checkpoint" | "invalidation";
@@ -66,25 +67,6 @@ function getSpyDrift(align: AlignRow | undefined): number | null {
   return cell.driftPct ?? null;
 }
 
-function computeSupport(
-  indicators: IndicatorRow[],
-  defsByKey: Record<string, DefInput>,
-  scenarioKey: ScenarioKey
-): number {
-  let sum = 0;
-  for (const row of indicators) {
-    const def = defsByKey[row.indicator_key];
-    const weights = def?.weights as Record<string, Partial<Record<string, number>>> | undefined;
-    if (!weights || typeof weights !== "object") continue;
-    const stateKey = row.state ?? "";
-    const stateWeights =
-      weights[stateKey] ?? weights[stateKey.toLowerCase()] ?? weights[stateKey.toUpperCase()];
-    const w = (stateWeights && typeof stateWeights === "object" && stateWeights[scenarioKey]) ?? 0;
-    sum += Number(w);
-  }
-  return sum;
-}
-
 export function scoreTripwires(params: ScoreTripwiresParams): TripwireResult[] {
   const {
     latestSnapshot,
@@ -134,17 +116,11 @@ export function scoreTripwires(params: ScoreTripwiresParams): TripwireResult[] {
   }
   const bullBearDiff = bullishCount - bearishCount;
 
-  const supportBase = computeSupport(latestIndicators, defsByKey, "base");
-  const supportBull = computeSupport(latestIndicators, defsByKey, "bull");
-  const supportBear = computeSupport(latestIndicators, defsByKey, "bear");
-  const supportActive = computeSupport(latestIndicators, defsByKey, activeScenario);
-  const maxOther =
-    activeScenario === "base"
-      ? Math.max(supportBull, supportBear)
-      : activeScenario === "bull"
-        ? Math.max(supportBase, supportBear)
-        : Math.max(supportBase, supportBull);
-  const supportDelta = supportActive - maxOther;
+  const supportDelta = computeSupportDelta({
+    indicatorRows: latestIndicators,
+    defsByKey,
+    activeScenario,
+  });
 
   const evidenceBullets: string[] = [];
   if (bigDrift) {

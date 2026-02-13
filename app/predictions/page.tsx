@@ -1,7 +1,10 @@
 import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabaseClient";
 import { findLastComputedAlignmentWeek } from "@/lib/alignmentHelpers";
+import { computeSupportDelta } from "@/lib/evidenceSupport";
 import { scoreTripwires, summarizeTripwires } from "@/lib/tripwireStatus";
+import { computePathIntegrity } from "@/lib/pathIntegrity";
+import { buildPathIntegrityExplain } from "@/lib/pathIntegrityExplain";
 import { buildWhatChangedBullets } from "@/lib/whatChanged";
 import { getEvidenceForWeek } from "@/lib/getEvidenceForWeek";
 import { ForecastAtAGlance } from "@/components/ForecastAtAGlance";
@@ -64,7 +67,7 @@ export default async function PredictionsPage({
 
   const { data: snapshots } = await supabase
     .from("weekly_snapshots")
-    .select("week_ending, alignment, btc_close, spy_close, spx_equiv, spx_factor, active_scenario")
+    .select("week_ending, alignment, btc_close, spy_close, spx_equiv, spx_factor, active_scenario, confidence, forecast_id")
     .order("week_ending", { ascending: false })
     .limit(8);
 
@@ -83,14 +86,14 @@ export default async function PredictionsPage({
   const checkpoints = scenario?.checkpoints ?? [];
   const invalidations = scenario?.invalidations ?? [];
 
-  const defsByKey = Object.fromEntries(
+  const defsByKeyName = Object.fromEntries(evidence.definitions.map((d) => [d.key, d.name]));
+
+  const defsByKeyForTripwire = Object.fromEntries(
     evidence.definitions.map((d) => [
       d.key,
       { name: d.name, weights: d.weights as Record<string, Partial<Record<string, number>>> },
     ])
   );
-  const defsByKeyName = Object.fromEntries(evidence.definitions.map((d) => [d.key, d.name]));
-
   const tripwireResults =
     snapshot && scenario
       ? scoreTripwires({
@@ -107,10 +110,97 @@ export default async function PredictionsPage({
               }
             : null,
           latestIndicators: evidence.indicatorRows,
-          defsByKey,
+          defsByKey: defsByKeyForTripwire,
           scenarioConfig: { checkpoints, invalidations },
         })
       : [];
+  const tripwireSummary = tripwireResults.length > 0 ? summarizeTripwires(tripwireResults) : undefined;
+  const supportDelta =
+    snapshot && activeScenario
+      ? computeSupportDelta({
+          indicatorRows: evidence.indicatorRows,
+          defsByKey: defsByKeyForTripwire,
+          activeScenario,
+        })
+      : 0;
+  const pathIntegrity =
+    snapshot && activeScenario
+      ? computePathIntegrity({
+          latestSnapshot: {
+            week_ending: snapshot.week_ending,
+            active_scenario: activeScenario,
+            confidence: snapshot.confidence,
+            alignment: snapshot.alignment as Record<string, { btc?: { inBand: boolean; driftPct?: number }; spy?: { inBand: boolean; driftPct?: number } } | undefined>,
+          },
+          prevSnapshot: prevSnapshot
+            ? {
+                week_ending: prevSnapshot.week_ending,
+                active_scenario: prevSnapshot.active_scenario as ScenarioKey,
+                confidence: prevSnapshot.confidence,
+                alignment: prevSnapshot.alignment as Record<string, { btc?: { inBand: boolean; driftPct?: number }; spy?: { inBand: boolean; driftPct?: number } } | undefined>,
+              }
+            : null,
+          supportDelta,
+          tripwireSummary: tripwireSummary ?? { confirming: 0, watching: 0, risk: 0 },
+          prevSupportDelta: prevSnapshot && activeScenario
+            ? computeSupportDelta({
+                indicatorRows: prevEvidence.indicatorRows,
+                defsByKey: Object.fromEntries(
+                  prevEvidence.definitions.map((d) => [
+                    d.key,
+                    { name: d.name, weights: d.weights as Record<string, Partial<Record<string, number>>> },
+                  ])
+                ),
+                activeScenario,
+              })
+            : undefined,
+          prevTripwireSummary:
+            prevSnapshot && activeScenario
+              ? summarizeTripwires(
+                  scoreTripwires({
+                    latestSnapshot: {
+                      week_ending: prevSnapshot.week_ending,
+                      active_scenario: prevSnapshot.active_scenario as ScenarioKey,
+                      alignment: prevSnapshot.alignment as Record<string, { btc?: { inBand: boolean; driftPct?: number }; spy?: { inBand: boolean; driftPct?: number } } | undefined>,
+                    },
+                    latestIndicators: prevEvidence.indicatorRows,
+                    defsByKey: Object.fromEntries(
+                      prevEvidence.definitions.map((d) => [
+                        d.key,
+                        { name: d.name, weights: d.weights as Record<string, Partial<Record<string, number>>> },
+                      ])
+                    ),
+                    scenarioConfig: { checkpoints, invalidations },
+                  })
+                )
+              : undefined,
+        })
+      : null;
+
+  const pathIntegrityExplain =
+    pathIntegrity && snapshot && activeScenario
+      ? buildPathIntegrityExplain({
+          latestSnapshot: {
+            week_ending: snapshot.week_ending,
+            active_scenario: activeScenario,
+            confidence: snapshot.confidence,
+            alignment: snapshot.alignment as Record<string, { btc?: { inBand: boolean; driftPct?: number }; spy?: { inBand: boolean; driftPct?: number } } | undefined>,
+          },
+          prevSnapshot: prevSnapshot
+            ? {
+                week_ending: prevSnapshot.week_ending,
+                active_scenario: prevSnapshot.active_scenario as ScenarioKey,
+                confidence: prevSnapshot.confidence,
+                alignment: prevSnapshot.alignment as Record<string, { btc?: { inBand: boolean; driftPct?: number }; spy?: { inBand: boolean; driftPct?: number } } | undefined>,
+              }
+            : null,
+          integrity: pathIntegrity,
+          supportDelta,
+          tripwireSummary: tripwireSummary ?? { confirming: 0, watching: 0, risk: 0 },
+          scenarioLabel: activeScenario.charAt(0).toUpperCase() + activeScenario.slice(1),
+          factor: snapshot.spx_factor ?? undefined,
+        })
+      : null;
 
   const whatChangedBullets =
     snapshot && prevSnapshot
@@ -159,6 +249,10 @@ export default async function PredictionsPage({
             snapshotsForSparkline={snapshotsForSparkline}
             checkpointsCount={checkpoints.length}
             invalidationsCount={invalidations.length}
+            pathIntegrity={pathIntegrity}
+            pathIntegrityExplain={pathIntegrityExplain}
+            weekEnding={snapshot?.week_ending}
+            shareMode={shareMode}
           />
           {snapshot && whatChangedBullets.length > 0 && (
             <WhatChangedCard bullets={whatChangedBullets} shareMode={shareMode} />

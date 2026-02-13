@@ -1,10 +1,14 @@
 import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabaseClient";
 import { findLastComputedAlignmentWeek } from "@/lib/alignmentHelpers";
+import { computeSupportDelta } from "@/lib/evidenceSupport";
 import { scoreTripwires, summarizeTripwires } from "@/lib/tripwireStatus";
+import { computePathIntegrity } from "@/lib/pathIntegrity";
+import { buildPathIntegrityExplain } from "@/lib/pathIntegrityExplain";
 import { getEvidenceForWeek } from "@/lib/getEvidenceForWeek";
 import { buildWeeklyBrief } from "@/lib/weeklyBrief";
 import { MarkSeenWeek } from "@/components/MarkSeenWeek";
+import { SignalBoardCard } from "@/components/SignalBoardCard";
 import { WeeklyBriefCard } from "@/components/WeeklyBriefCard";
 import type { ForecastConfig, ScenarioKey } from "@/lib/types";
 
@@ -97,6 +101,104 @@ export default async function BriefDetailPage({
     : [];
   const tripwireSummary = tripwireResults.length > 0 ? summarizeTripwires(tripwireResults) : undefined;
 
+  const supportDelta = scenarioConfig
+    ? computeSupportDelta({
+        indicatorRows: evidence.indicatorRows,
+        defsByKey: defsByKeyForTripwire,
+        activeScenario: activeScenarioKey,
+      })
+    : 0;
+
+  const pathIntegrity =
+    scenarioConfig
+      ? computePathIntegrity({
+          latestSnapshot: {
+            week_ending: snapshot.week_ending,
+            active_scenario: activeScenarioKey,
+            confidence: snapshot.confidence,
+            alignment: align,
+          },
+          prevSnapshot: prevSnapshot
+            ? {
+                week_ending: prevSnapshot.week_ending,
+                active_scenario: (prevSnapshot.active_scenario as ScenarioKey) ?? "base",
+                confidence: prevSnapshot.confidence,
+                alignment: (prevSnapshot.alignment as Record<string, { btc?: { inBand: boolean; driftPct?: number }; spy?: { inBand: boolean; driftPct?: number } } | undefined>) ?? {},
+              }
+            : null,
+          supportDelta,
+          tripwireSummary: tripwireSummary ?? { confirming: 0, watching: 0, risk: 0 },
+          prevSupportDelta: prevSnapshot && scenarioConfig
+            ? computeSupportDelta({
+                indicatorRows: prevEvidence.indicatorRows,
+                defsByKey: Object.fromEntries(
+                  prevEvidence.definitions.map((d) => [
+                    d.key,
+                    { name: d.name, weights: d.weights as Record<string, Partial<Record<string, number>>> },
+                  ])
+                ),
+                activeScenario: activeScenarioKey,
+              })
+            : undefined,
+          prevTripwireSummary: prevSnapshot && scenarioConfig
+            ? summarizeTripwires(
+                scoreTripwires({
+                  latestSnapshot: {
+                    week_ending: prevSnapshot.week_ending,
+                    active_scenario: (prevSnapshot.active_scenario as ScenarioKey) ?? "base",
+                    alignment: (prevSnapshot.alignment as Record<string, { btc?: { inBand: boolean; driftPct?: number }; spy?: { inBand: boolean; driftPct?: number } } | undefined>) ?? {},
+                  },
+                  latestIndicators: prevEvidence.indicatorRows,
+                  defsByKey: Object.fromEntries(
+                    prevEvidence.definitions.map((d) => [
+                      d.key,
+                      { name: d.name, weights: d.weights as Record<string, Partial<Record<string, number>>> },
+                    ])
+                  ),
+                  scenarioConfig,
+                })
+              )
+            : undefined,
+        })
+      : null;
+
+  function formatDrift(inBand: boolean, driftPct?: number): string {
+    if (inBand) return "In (0.0%)";
+    if (driftPct != null) {
+      const sign = driftPct >= 0 ? "+" : "";
+      return `Out (${sign}${driftPct.toFixed(1)}%)`;
+    }
+    return "—";
+  }
+  const baseAlign = align[activeScenarioKey] ?? align["base"];
+  const btcStatus = baseAlign?.btc != null ? formatDrift(baseAlign.btc.inBand, baseAlign.btc.driftPct) : "—";
+  const eqStatus = baseAlign?.spy != null ? formatDrift(baseAlign.spy.inBand, baseAlign.spy.driftPct) : "—";
+
+  const pathIntegrityExplain =
+    pathIntegrity && scenarioConfig
+      ? buildPathIntegrityExplain({
+          latestSnapshot: {
+            week_ending: snapshot.week_ending,
+            active_scenario: activeScenarioKey,
+            confidence: snapshot.confidence,
+            alignment: align,
+          },
+          prevSnapshot: prevSnapshot
+            ? {
+                week_ending: prevSnapshot.week_ending,
+                active_scenario: (prevSnapshot.active_scenario as ScenarioKey) ?? "base",
+                confidence: prevSnapshot.confidence,
+                alignment: (prevSnapshot.alignment as Record<string, { btc?: { inBand: boolean; driftPct?: number }; spy?: { inBand: boolean; driftPct?: number } } | undefined>) ?? {},
+              }
+            : null,
+          integrity: pathIntegrity,
+          supportDelta,
+          tripwireSummary: tripwireSummary ?? { confirming: 0, watching: 0, risk: 0 },
+          scenarioLabel: activeScenarioKey.charAt(0).toUpperCase() + activeScenarioKey.slice(1),
+          factor: snapshot.spx_factor ?? undefined,
+        })
+      : null;
+
   const brief = buildWeeklyBrief({
     latestSnapshot: {
       week_ending: snapshot.week_ending,
@@ -128,9 +230,23 @@ export default async function BriefDetailPage({
   return (
     <div className="space-y-6">
       <MarkSeenWeek weekEnding={week_ending} shareMode={shareMode} />
-      <a href="/briefs" className="text-sm text-zinc-500 hover:text-white">
+      <a href={shareMode ? "/briefs?share=1" : "/briefs"} className="text-sm text-zinc-500 hover:text-white">
         ← Back to archive
       </a>
+      {pathIntegrity && (
+        <SignalBoardCard
+          integrity={pathIntegrity}
+          shareMode={shareMode}
+          weekEnding={week_ending}
+          forecastVersion={forecast?.version}
+          activeScenarioLabel={activeScenarioKey.charAt(0).toUpperCase() + activeScenarioKey.slice(1)}
+          confidence={snapshot.confidence}
+          btcStatus={btcStatus}
+          eqStatus={eqStatus}
+          explain={pathIntegrityExplain}
+          canonicalUrl={`/briefs/${week_ending}`}
+        />
+      )}
       <WeeklyBriefCard
         brief={brief}
         shareMode={shareMode}
