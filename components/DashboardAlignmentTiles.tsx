@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AlignmentPendingNote } from "@/components/AlignmentPendingNote";
 import { MiniSparkline } from "@/components/MiniSparkline";
 import type { ScenarioKey } from "@/lib/types";
 
@@ -18,17 +19,20 @@ interface DashboardAlignmentTilesProps {
   /** Last 8 snapshots (oldest first) for sparklines */
   snapshotsForSparkline?: SnapshotForSparkline[];
   nerdMode?: boolean;
+  lastComputedWeekEnding?: string | null;
 }
 
 function DriftDisplay({
   inBand,
   driftPct,
   isPending,
+  lastComputedWeekEnding,
   nerdMode,
 }: {
   inBand: boolean;
   driftPct?: number;
   isPending: boolean;
+  lastComputedWeekEnding?: string | null;
   nerdMode?: boolean;
 }) {
   if (inBand) return <span className="text-emerald-400">In (0.0%)</span>;
@@ -38,13 +42,10 @@ function DriftDisplay({
   }
   if (isPending) {
     return (
-      <span>
-        <span className="text-zinc-500">Alignment pending</span>
-        <span className="block text-xs text-zinc-600">
-          Waiting for weekly run / drift compute.
-          {nerdMode && " Run weekly pipeline / check runs page."}
-        </span>
-      </span>
+      <AlignmentPendingNote
+        lastComputedWeekEnding={lastComputedWeekEnding}
+        nerdMode={nerdMode}
+      />
     );
   }
   return <span className="text-zinc-500">—</span>;
@@ -63,6 +64,7 @@ export function DashboardAlignmentTiles({
   weekEnding,
   snapshotsForSparkline = [],
   nerdMode = false,
+  lastComputedWeekEnding = null,
 }: DashboardAlignmentTilesProps) {
   const activeAlign = alignment[activeScenarioKey] ?? alignment["base"];
   const btcCell = activeAlign?.btc;
@@ -96,6 +98,7 @@ export function DashboardAlignmentTiles({
             inBand={btcIn}
             driftPct={activeAlign?.btc?.driftPct}
             isPending={btcPending}
+            lastComputedWeekEnding={lastComputedWeekEnding}
             nerdMode={nerdMode}
           />
           {btcDriftSeries.length >= 2 && (
@@ -113,6 +116,7 @@ export function DashboardAlignmentTiles({
             inBand={spyIn}
             driftPct={activeAlign?.spy?.driftPct}
             isPending={spyPending}
+            lastComputedWeekEnding={lastComputedWeekEnding}
             nerdMode={nerdMode}
           />
           {spyDriftSeries.length >= 2 && (

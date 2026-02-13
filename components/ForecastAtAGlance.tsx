@@ -31,10 +31,13 @@ function getTimelineForScenario(
   return (scenarioTimeline ?? configTimeline) ?? [];
 }
 
-function PeriodBlock({ p, isCurrent }: { p: PeriodBand; isCurrent?: boolean }) {
+function PeriodBlock({ p, isCurrent, id }: { p: PeriodBand; isCurrent?: boolean; id?: string }) {
   const label = derivePeriodLabel(p.start, p.end, p.label);
   return (
-    <div className={`rounded border p-2 text-sm ${isCurrent ? "border-amber-500/70 bg-amber-950/30" : "border-zinc-700"}`}>
+    <div
+      id={id}
+      className={`rounded border p-2 text-sm ${isCurrent ? "border-amber-500/70 bg-amber-950/30" : "border-zinc-700"}`}
+    >
       <div className="flex items-center gap-2">
         <span className="font-medium text-zinc-300">{label}</span>
         {isCurrent && (
@@ -125,7 +128,11 @@ export function ForecastAtAGlance({ config, forecastName, version, currentPeriod
           <section>
             <h3 className="mb-2 text-sm font-medium text-zinc-400">Period bands</h3>
             <p className="mb-2 text-xs text-zinc-500">These are wide on purpose. Use checkpoints + invalidations to track the path.</p>
-            <div className="space-y-2">{(scenario.periods ?? []).map((p, i) => <PeriodBlock key={i} p={p} isCurrent={i === currentPeriodIndex} />)}</div>
+            <div className="space-y-2">
+              {(scenario.periods ?? []).map((p, i) => (
+                <PeriodBlock key={i} p={p} isCurrent={i === currentPeriodIndex} id={`timebox-${i}`} />
+              ))}
+            </div>
             {isLongSingleYearPeriod(scenario.periods ?? []) && (() => {
               const firstPeriod = scenario.periods![0];
               const year = new Date(firstPeriod.start).getFullYear();

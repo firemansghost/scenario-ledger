@@ -80,19 +80,25 @@ export function PublishedForecastSummary({
         <div className="space-y-2">
           <p className="text-sm text-zinc-400">Tripwires (preview)</p>
           <p className="text-xs text-zinc-500">
-            Checkpoints = signs we&apos;re on track. Invalidations = signs we&apos;re wrong.
+            Conditions we watch to confirm the path — or admit we&apos;re wrong. Status is not auto-scored yet.
           </p>
           <div className="grid gap-4 text-sm md:grid-cols-2">
-            <ul className="list-disc space-y-0.5 pl-4 text-zinc-400">
-              {(scenario.checkpoints ?? []).slice(0, 3).map((c, i) => (
-                <li key={i}>{c}</li>
-              ))}
-            </ul>
-            <ul className="list-disc space-y-0.5 pl-4 text-zinc-400">
-              {(scenario.invalidations ?? []).slice(0, 3).map((inv, i) => (
-                <li key={i}>{inv}</li>
-              ))}
-            </ul>
+            <div>
+              <span className="rounded bg-zinc-700/50 px-1.5 py-0.5 text-xs text-zinc-400">Checkpoint</span>
+              <ul className="mt-1 list-disc space-y-0.5 pl-4 text-zinc-400">
+                {(scenario.checkpoints ?? []).slice(0, 3).map((c, i) => (
+                  <li key={i}>{c}</li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <span className="rounded bg-zinc-700/50 px-1.5 py-0.5 text-xs text-zinc-400">Invalidation</span>
+              <ul className="mt-1 list-disc space-y-0.5 pl-4 text-zinc-400">
+                {(scenario.invalidations ?? []).slice(0, 3).map((inv, i) => (
+                  <li key={i}>{inv}</li>
+                ))}
+              </ul>
+            </div>
           </div>
           <Link href="#tripwires" className="text-xs text-zinc-500 underline hover:text-zinc-300">
             Jump to full checklist

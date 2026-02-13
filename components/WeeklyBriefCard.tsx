@@ -2,14 +2,22 @@
 
 import Link from "next/link";
 import { useCallback, useState } from "react";
+import { AlignmentPendingNote } from "@/components/AlignmentPendingNote";
 import { buildBriefCopyText, getBriefSharePath, type WeeklyBriefResult } from "@/lib/weeklyBrief";
 
 interface WeeklyBriefCardProps {
   brief: WeeklyBriefResult;
   shareMode?: boolean;
+  lastComputedWeekEnding?: string | null;
+  nerdMode?: boolean;
 }
 
-export function WeeklyBriefCard({ brief, shareMode }: WeeklyBriefCardProps) {
+export function WeeklyBriefCard({
+  brief,
+  shareMode,
+  lastComputedWeekEnding,
+  nerdMode = false,
+}: WeeklyBriefCardProps) {
   const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "share-copied">("idle");
   const primaryHref = shareMode ? "/predictions?share=1#this-week" : brief.ctas.primaryHref;
 
@@ -63,9 +71,16 @@ export function WeeklyBriefCard({ brief, shareMode }: WeeklyBriefCardProps) {
         <span>
           Probs: Base {brief.stats.probDeltas.base >= 0 ? "+" : ""}{brief.stats.probDeltas.base}pp | Bull {brief.stats.probDeltas.bull >= 0 ? "+" : ""}{brief.stats.probDeltas.bull}pp | Bear {brief.stats.probDeltas.bear >= 0 ? "+" : ""}{brief.stats.probDeltas.bear}pp
         </span>
-        {brief.stats.btcStatus != null && brief.stats.eqStatus != null && (
+        {brief.stats.btcStatus != null && brief.stats.eqStatus != null ? (
           <span>
             Alignment: BTC {brief.stats.btcStatus} · Equity {brief.stats.eqStatus}
+          </span>
+        ) : (
+          <span>
+            <AlignmentPendingNote
+              lastComputedWeekEnding={lastComputedWeekEnding}
+              nerdMode={nerdMode}
+            />
           </span>
         )}
       </div>
