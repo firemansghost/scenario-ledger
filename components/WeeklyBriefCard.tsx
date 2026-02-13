@@ -10,6 +10,7 @@ interface WeeklyBriefCardProps {
   shareMode?: boolean;
   lastComputedWeekEnding?: string | null;
   nerdMode?: boolean;
+  tripwireSummary?: { confirming: number; watching: number; risk: number };
 }
 
 export function WeeklyBriefCard({
@@ -17,9 +18,11 @@ export function WeeklyBriefCard({
   shareMode,
   lastComputedWeekEnding,
   nerdMode = false,
+  tripwireSummary,
 }: WeeklyBriefCardProps) {
   const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "share-copied">("idle");
   const primaryHref = shareMode ? "/predictions?share=1#this-week" : brief.ctas.primaryHref;
+  const tripwiresHref = shareMode ? "/predictions?share=1#tripwires" : "/predictions#tripwires";
 
   const handleCopyBrief = useCallback(async () => {
     const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
@@ -81,6 +84,13 @@ export function WeeklyBriefCard({
               lastComputedWeekEnding={lastComputedWeekEnding}
               nerdMode={nerdMode}
             />
+          </span>
+        )}
+        {tripwireSummary && (tripwireSummary.confirming > 0 || tripwireSummary.watching > 0 || tripwireSummary.risk > 0) && (
+          <span>
+            <Link href={tripwiresHref} className="text-zinc-500 hover:text-zinc-300">
+              Tripwires: {tripwireSummary.confirming} confirming · {tripwireSummary.watching} watching · {tripwireSummary.risk} risk
+            </Link>
           </span>
         )}
       </div>

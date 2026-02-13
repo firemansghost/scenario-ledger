@@ -3,6 +3,7 @@ import { createServiceRoleClient } from "@/lib/supabaseServer";
 import { getDataHealth } from "@/lib/dataHealth";
 import { getEvidenceForWeek } from "@/lib/getEvidenceForWeek";
 import { findLastComputedAlignmentWeek } from "@/lib/alignmentHelpers";
+import { scoreTripwires, summarizeTripwires } from "@/lib/tripwireStatus";
 import { prettifyKey } from "@/lib/format";
 import { buildWeeklyBrief } from "@/lib/weeklyBrief";
 import { CopySummaryButton } from "@/components/CopySummaryButton";
@@ -114,10 +115,38 @@ export async function Dashboard(props: { shareMode?: boolean; nerdMode?: boolean
   const align = (snapshot?.alignment as Record<string, { btc?: { inBand: boolean; driftPct?: number }; spy?: { inBand: boolean; driftPct?: number } } | undefined>) ?? {};
 
   const defsByKey = Object.fromEntries(evidence.definitions.map((d) => [d.key, d.name]));
+  const defsByKeyForTripwire = Object.fromEntries(
+    evidence.definitions.map((d) => [
+      d.key,
+      { name: d.name, weights: d.weights as Record<string, Partial<Record<string, number>>> },
+    ])
+  );
   const forecastConfigForBrief = (forecast?.config as ForecastConfig | null) ?? null;
   const scenarioConfig = activeScenarioKey && forecastConfigForBrief?.scenarios?.[activeScenarioKey]
     ? { checkpoints: forecastConfigForBrief.scenarios[activeScenarioKey].checkpoints ?? [], invalidations: forecastConfigForBrief.scenarios[activeScenarioKey].invalidations ?? [] }
     : undefined;
+
+  const tripwireResults =
+    snapshot && activeScenarioKey
+      ? scoreTripwires({
+          latestSnapshot: {
+            week_ending: snapshot.week_ending,
+            active_scenario: activeScenarioKey ?? "base",
+            alignment: snapshot.alignment as Record<string, { btc?: { inBand: boolean; driftPct?: number }; spy?: { inBand: boolean; driftPct?: number } } | undefined>,
+          },
+          prevSnapshot: prevSnapshot
+            ? {
+                week_ending: prevSnapshot.week_ending,
+                active_scenario: (prevSnapshot.active_scenario as ScenarioKey) ?? "base",
+                alignment: prevSnapshot.alignment as Record<string, { btc?: { inBand: boolean; driftPct?: number }; spy?: { inBand: boolean; driftPct?: number } } | undefined>,
+              }
+            : null,
+          latestIndicators: evidence.indicatorRows,
+          defsByKey: defsByKeyForTripwire,
+          scenarioConfig: scenarioConfig ?? { checkpoints: [], invalidations: [] },
+        })
+      : [];
+  const tripwireSummary = tripwireResults.length > 0 ? summarizeTripwires(tripwireResults) : undefined;
 
   const prevTopContributors = prevSnapshot?.top_contributors ?? [];
   const latestTopContributors = snapshot?.top_contributors ?? [];
@@ -189,6 +218,7 @@ export async function Dashboard(props: { shareMode?: boolean; nerdMode?: boolean
               shareMode={shareMode}
               lastComputedWeekEnding={findLastComputedAlignmentWeek(snapshots)}
               nerdMode={nerdMode}
+              tripwireSummary={tripwireSummary}
             />
           )}
           {!shareMode && prevSnapshot && prevForNewCard && latestForNewCard && (
