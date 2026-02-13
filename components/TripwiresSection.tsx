@@ -16,15 +16,17 @@ export function TripwiresSection({
     <section id={id} className="space-y-3">
       <h3 className="text-sm font-medium text-zinc-400">Tripwires</h3>
       <p className="text-xs text-zinc-500">
-        These are the conditions we watch to confirm the path — or admit we&apos;re wrong.
+        These are the conditions we watch to confirm the path — or admit we&apos;re wrong. Status is not auto-scored yet.
       </p>
       <div className="grid gap-6 md:grid-cols-2">
         <div>
-          <p className="mb-2 text-xs font-medium text-zinc-500">Checkpoints</p>
+          <p className="mb-2 text-xs font-medium text-zinc-500">
+            <span className="rounded bg-zinc-700/50 px-1.5 py-0.5">Checkpoint</span>
+          </p>
           <ul className="space-y-1 text-sm text-zinc-300">
             {topCheckpoints.map((c, i) => (
               <li key={i} className="flex gap-2">
-                <span>✅</span>
+                <span className="text-zinc-500">•</span>
                 <span>{c}</span>
               </li>
             ))}
@@ -32,11 +34,13 @@ export function TripwiresSection({
           </ul>
         </div>
         <div>
-          <p className="mb-2 text-xs font-medium text-zinc-500">Invalidations</p>
+          <p className="mb-2 text-xs font-medium text-zinc-500">
+            <span className="rounded bg-zinc-700/50 px-1.5 py-0.5">Invalidation</span>
+          </p>
           <ul className="space-y-1 text-sm text-zinc-300">
             {topInvalidations.map((inv, i) => (
               <li key={i} className="flex gap-2">
-                <span>🚫</span>
+                <span className="text-zinc-500">•</span>
                 <span>{inv}</span>
               </li>
             ))}
@@ -54,7 +58,7 @@ export function TripwiresSection({
               <ul className="space-y-1 text-sm text-zinc-300">
                 {checkpoints.map((c, i) => (
                   <li key={i} className="flex gap-2">
-                    <span>✅</span>
+                    <span className="text-zinc-500">•</span>
                     <span>{c}</span>
                   </li>
                 ))}
@@ -64,7 +68,7 @@ export function TripwiresSection({
               <ul className="space-y-1 text-sm text-zinc-300">
                 {invalidations.map((inv, i) => (
                   <li key={i} className="flex gap-2">
-                    <span>🚫</span>
+                    <span className="text-zinc-500">•</span>
                     <span>{inv}</span>
                   </li>
                 ))}

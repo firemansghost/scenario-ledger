@@ -1,3 +1,4 @@
+import { AlignmentPendingNote } from "@/components/AlignmentPendingNote";
 import type { ScenarioKey } from "@/lib/types";
 
 type AlignRow = { btc?: { inBand: boolean; driftPct?: number }; spy?: { inBand: boolean; driftPct?: number }; periodLabel?: string };
@@ -12,6 +13,8 @@ interface SnapshotRow {
 interface ThisWeekVsForecastProps {
   snapshot: SnapshotRow;
   factor: number;
+  lastComputedWeekEnding?: string | null;
+  nerdMode?: boolean;
 }
 
 function DriftCell({
@@ -29,18 +32,21 @@ function DriftCell({
     return <span className="text-amber-400">Out ({sign}{driftPct.toFixed(1)}%)</span>;
   }
   const isPending = !hasCell || (!inBand && driftPct == null);
-  if (isPending) {
-    return (
-      <span>
-        <span className="text-zinc-500">Alignment pending</span>
-        <span className="block text-xs text-zinc-600">Waiting for weekly run / drift compute.</span>
-      </span>
-    );
-  }
   return <span className="text-zinc-500">—</span>;
 }
 
-export function ThisWeekVsForecast({ snapshot, factor }: ThisWeekVsForecastProps) {
+function hasComputedDrift(cell: AlignRow["btc"] | AlignRow["spy"]): boolean {
+  if (!cell) return false;
+  if (cell.inBand) return true;
+  return cell.driftPct != null;
+}
+
+export function ThisWeekVsForecast({
+  snapshot,
+  factor,
+  lastComputedWeekEnding,
+  nerdMode = false,
+}: ThisWeekVsForecastProps) {
   const align: Record<ScenarioKey, AlignRow> = snapshot.alignment ?? ({} as Record<ScenarioKey, AlignRow>);
   const scenarios: { key: ScenarioKey; label: string }[] = [
     { key: "bull", label: "Bull" },
@@ -48,11 +54,23 @@ export function ThisWeekVsForecast({ snapshot, factor }: ThisWeekVsForecastProps
     { key: "bear", label: "Bear" },
   ];
 
+  const baseAlign = align.base ?? align["base"];
+  const hasAnyComputed =
+    hasComputedDrift(baseAlign?.btc) || hasComputedDrift(baseAlign?.spy) ||
+    scenarios.some(({ key }) => hasComputedDrift(align[key]?.btc) || hasComputedDrift(align[key]?.spy));
+  const isSectionPending = !hasAnyComputed;
+
   return (
     <div className="space-y-3">
       <h2 className="text-lg font-medium">This week vs forecast</h2>
       <p className="text-sm text-zinc-500">In/Out is vs the published band for that timebox.</p>
       <p className="text-xs text-zinc-500">Week ending {snapshot.week_ending}</p>
+      {isSectionPending && (
+        <AlignmentPendingNote
+          lastComputedWeekEnding={lastComputedWeekEnding ?? undefined}
+          nerdMode={nerdMode}
+        />
+      )}
       <div className="overflow-x-auto rounded-lg border border-zinc-800">
         <table className="w-full text-left text-sm">
           <thead>

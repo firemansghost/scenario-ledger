@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabaseClient";
 import { createServiceRoleClient } from "@/lib/supabaseServer";
 import { getDataHealth } from "@/lib/dataHealth";
 import { getEvidenceForWeek } from "@/lib/getEvidenceForWeek";
+import { findLastComputedAlignmentWeek } from "@/lib/alignmentHelpers";
 import { prettifyKey } from "@/lib/format";
 import { buildWeeklyBrief } from "@/lib/weeklyBrief";
 import { CopySummaryButton } from "@/components/CopySummaryButton";
@@ -183,7 +184,12 @@ export async function Dashboard(props: { shareMode?: boolean; nerdMode?: boolean
             </div>
           )}
           {weeklyBrief && (
-            <WeeklyBriefCard brief={weeklyBrief} shareMode={shareMode} />
+            <WeeklyBriefCard
+              brief={weeklyBrief}
+              shareMode={shareMode}
+              lastComputedWeekEnding={findLastComputedAlignmentWeek(snapshots)}
+              nerdMode={nerdMode}
+            />
           )}
           {!shareMode && prevSnapshot && prevForNewCard && latestForNewCard && (
             <NewSinceLastVisitCard
@@ -228,6 +234,7 @@ export async function Dashboard(props: { shareMode?: boolean; nerdMode?: boolean
               weekEnding={snapshot.week_ending}
               snapshotsForSparkline={snapshotsForSparkline}
               nerdMode={nerdMode}
+              lastComputedWeekEnding={findLastComputedAlignmentWeek(snapshots)}
             />
             <ScenarioProbChips
               scenarioProbs={(snapshot.scenario_probs as Record<ScenarioKey, number>) ?? {}}

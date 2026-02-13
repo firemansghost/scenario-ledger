@@ -1,4 +1,6 @@
+import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabaseClient";
+import { findLastComputedAlignmentWeek } from "@/lib/alignmentHelpers";
 import { getEvidenceForWeek } from "@/lib/getEvidenceForWeek";
 import { buildWeeklyBrief } from "@/lib/weeklyBrief";
 import { MarkSeenWeek } from "@/components/MarkSeenWeek";
@@ -54,6 +56,9 @@ export default async function BriefDetailPage({
 
   const prevSnapshot = prevSnapshotResult.data;
   const forecast = forecastResult.data;
+  const cookieStore = await cookies();
+  const nerdMode = cookieStore.get("scenarioledger_nerd")?.value === "1";
+  const snapshotsForLastComputed = [snapshot, prevSnapshot].filter(Boolean);
   const activeForecast = activeForecastResult.data;
   const config = forecast?.config as ForecastConfig | null;
   const activeScenarioKey = (snapshot.active_scenario as ScenarioKey) ?? "base";
@@ -98,7 +103,12 @@ export default async function BriefDetailPage({
       <a href="/briefs" className="text-sm text-zinc-500 hover:text-white">
         ← Back to archive
       </a>
-      <WeeklyBriefCard brief={brief} shareMode={shareMode} />
+      <WeeklyBriefCard
+        brief={brief}
+        shareMode={shareMode}
+        lastComputedWeekEnding={findLastComputedAlignmentWeek(snapshotsForLastComputed)}
+        nerdMode={nerdMode}
+      />
     </div>
   );
 }

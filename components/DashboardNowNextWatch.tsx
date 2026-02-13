@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { derivePeriodLabel } from "@/lib/periodLabels";
 import { TimeboxProgress } from "@/components/TimeboxProgress";
+import { TimeboxStrip } from "@/components/TimeboxStrip";
 import type { ForecastConfig, PeriodBand, ScenarioKey } from "@/lib/types";
 import type { TopContributor } from "@/lib/types";
 
@@ -51,6 +52,10 @@ export function DashboardNowNextWatch({
   const scenario = forecastConfig.scenarios?.[activeScenarioKey];
   const periods = scenario?.periods ?? [];
   const currentPeriod = findCurrentPeriod(periods, latestSnapshot.week_ending) ?? periods[0] ?? null;
+  let currentPeriodIndex = currentPeriod
+    ? periods.findIndex((p) => p.start === currentPeriod.start && p.end === currentPeriod.end)
+    : 0;
+  if (currentPeriodIndex < 0) currentPeriodIndex = 0;
   const checkpoints = (scenario?.checkpoints ?? []).slice(0, 3);
   const invalidations = (scenario?.invalidations ?? []).slice(0, 3);
   const topContributors = (latestSnapshot.top_contributors ?? []).slice(0, 3);
@@ -103,6 +108,15 @@ export function DashboardNowNextWatch({
               Pinned forecast: v{forecastVersion}
             </Link>
           </p>
+        )}
+        {periods.length > 0 && (
+          <div className="mb-3">
+            <TimeboxStrip
+              periods={periods}
+              currentIndex={currentPeriodIndex}
+              shareMode={shareMode}
+            />
+          </div>
         )}
         {currentPeriod && (
           <div className="space-y-2">

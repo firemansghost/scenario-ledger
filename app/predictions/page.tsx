@@ -1,10 +1,13 @@
+import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabaseClient";
+import { findLastComputedAlignmentWeek } from "@/lib/alignmentHelpers";
 import { ForecastAtAGlance } from "@/components/ForecastAtAGlance";
 import { NearTermMap } from "@/components/NearTermMap";
 import { PredictionsAtAGlanceStrip } from "@/components/PredictionsAtAGlanceStrip";
 import { PublishedForecastSummary } from "@/components/PublishedForecastSummary";
 import { ScenarioComparisonGrid } from "@/components/ScenarioComparisonGrid";
 import { ThisWeekVsForecast } from "@/components/ThisWeekVsForecast";
+import { TimeboxStrip } from "@/components/TimeboxStrip";
 import { TripwiresSection } from "@/components/TripwiresSection";
 import type { ForecastConfig, PeriodBand, ScenarioKey } from "@/lib/types";
 
@@ -39,8 +42,16 @@ function findCurrentPeriod(
   return periods[0] ?? null;
 }
 
-export default async function PredictionsPage() {
+export default async function PredictionsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ share?: string }>;
+}) {
+  const params = await searchParams;
+  const shareMode = params?.share === "1";
   const supabase = createClient();
+  const cookieStore = await cookies();
+  const nerdMode = cookieStore.get("scenarioledger_nerd")?.value === "1";
   const { data: forecast } = await supabase
     .from("forecasts")
     .select("id, version, name, config, created_at")
@@ -93,11 +104,25 @@ export default async function PredictionsPage() {
           />
           {snapshot && (
             <section id="this-week" className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-4">
-              <ThisWeekVsForecast snapshot={snapshot} factor={factor} />
+              <ThisWeekVsForecast
+                snapshot={snapshot}
+                factor={factor}
+                lastComputedWeekEnding={findLastComputedAlignmentWeek(snapshots)}
+                nerdMode={nerdMode}
+              />
             </section>
           )}
           <section id="timeboxes" className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-4">
             <h2 className="mb-3 text-lg font-medium">Forecast at a glance</h2>
+            {periods.length > 0 && (
+              <div className="mb-4">
+                <TimeboxStrip
+                  periods={periods}
+                  currentIndex={currentPeriodIndex}
+                  shareMode={shareMode}
+                />
+              </div>
+            )}
             <ForecastAtAGlance
               config={config}
               forecastName={forecast?.name ?? undefined}
