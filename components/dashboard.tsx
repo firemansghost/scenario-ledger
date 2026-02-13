@@ -7,6 +7,7 @@ import { computeSupportDelta } from "@/lib/evidenceSupport";
 import { scoreTripwires, summarizeTripwires } from "@/lib/tripwireStatus";
 import { computePathIntegrity } from "@/lib/pathIntegrity";
 import { buildPathIntegrityExplain } from "@/lib/pathIntegrityExplain";
+import { buildWeeklyPlaybook } from "@/lib/playbook";
 import { prettifyKey } from "@/lib/format";
 import { buildWeeklyBrief } from "@/lib/weeklyBrief";
 import { CopySummaryButton } from "@/components/CopySummaryButton";
@@ -19,6 +20,7 @@ import { ReceiptsPanel } from "@/components/ReceiptsPanel";
 import { DashboardIntro } from "@/components/DashboardIntro";
 import { NewSinceLastVisitCard } from "@/components/NewSinceLastVisitCard";
 import { SignalBoardCard } from "@/components/SignalBoardCard";
+import { WeeklyPlaybookCard } from "@/components/WeeklyPlaybookCard";
 import { StreakMeterCard } from "@/components/StreakMeterCard";
 import { WeeklyBriefCard } from "@/components/WeeklyBriefCard";
 import type { ForecastConfig, ScenarioKey } from "@/lib/types";
@@ -266,6 +268,34 @@ export async function Dashboard(props: { shareMode?: boolean; nerdMode?: boolean
   const baseAlign = align[activeScenarioKey ?? "base"] ?? align["base"];
   const btcStatus = baseAlign?.btc != null ? formatDrift(baseAlign.btc.inBand, baseAlign.btc.driftPct) : "—";
   const eqStatus = baseAlign?.spy != null ? formatDrift(baseAlign.spy.inBand, baseAlign.spy.driftPct) : "—";
+  const btcDrift = baseAlign?.btc?.inBand ? 0 : (baseAlign?.btc?.driftPct ?? null);
+  const eqDrift = baseAlign?.spy?.inBand ? 0 : (baseAlign?.spy?.driftPct ?? null);
+
+  const weeklyPlaybook =
+    pathIntegrity && scenarioConfig
+      ? buildWeeklyPlaybook({
+          latestSnapshot: {
+            week_ending: snapshot.week_ending,
+            active_scenario: activeScenarioKey ?? "base",
+            alignment: snapshot.alignment as Record<string, { btc?: { inBand: boolean; driftPct?: number }; spy?: { inBand: boolean; driftPct?: number } } | undefined>,
+          },
+          prevSnapshot: prevSnapshot
+            ? {
+                week_ending: prevSnapshot.week_ending,
+                active_scenario: (prevSnapshot.active_scenario as ScenarioKey) ?? "base",
+                alignment: prevSnapshot.alignment as Record<string, { btc?: { inBand: boolean; driftPct?: number }; spy?: { inBand: boolean; driftPct?: number } } | undefined>,
+              }
+            : null,
+          scenarioConfig,
+          tripwireResults,
+          tripwireSummary: tripwireSummary ?? { confirming: 0, watching: 0, risk: 0 },
+          supportDelta,
+          integrity: pathIntegrity,
+          integrityTrend: integrityScoresForSparkline.filter((v): v is number => v != null),
+          btcDrift,
+          eqDrift,
+        })
+      : null;
 
   const pathIntegrityExplain =
     pathIntegrity && snapshot && activeScenarioKey
@@ -369,6 +399,21 @@ export async function Dashboard(props: { shareMode?: boolean; nerdMode?: boolean
               integrityScoresForSparkline={integrityScoresForSparkline}
               explain={pathIntegrityExplain}
               canonicalUrl={`/briefs/${snapshot.week_ending}`}
+            />
+          )}
+          {weeklyPlaybook && (
+            <WeeklyPlaybookCard
+              playbook={weeklyPlaybook}
+              weekEnding={String(snapshot.week_ending)}
+              shareMode={shareMode}
+              nerdMode={nerdMode}
+              links={{
+                forecastBrief: shareMode ? "/predictions?share=1#tripwires" : "/predictions#tripwires",
+                tripwiresAnchor: shareMode ? "/predictions?share=1#tripwires" : "/predictions#tripwires",
+                alignment: shareMode ? "/alignment?share=1" : "/alignment",
+                evidence: shareMode ? "/evidence?share=1" : "/evidence",
+                briefsWeek: shareMode ? `/briefs/${snapshot.week_ending}?share=1` : `/briefs/${snapshot.week_ending}`,
+              }}
             />
           )}
           {weeklyBrief && (
