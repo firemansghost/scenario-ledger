@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabaseClient";
 import { findLastComputedAlignmentWeek } from "@/lib/alignmentHelpers";
+import { scoreTripwires, summarizeTripwires } from "@/lib/tripwireStatus";
 import { getEvidenceForWeek } from "@/lib/getEvidenceForWeek";
 import { buildWeeklyBrief } from "@/lib/weeklyBrief";
 import { MarkSeenWeek } from "@/components/MarkSeenWeek";
@@ -67,7 +68,34 @@ export default async function BriefDetailPage({
     : undefined;
 
   const defsByKey = Object.fromEntries(evidence.definitions.map((d) => [d.key, d.name]));
+  const defsByKeyForTripwire = Object.fromEntries(
+    evidence.definitions.map((d) => [
+      d.key,
+      { name: d.name, weights: d.weights as Record<string, Partial<Record<string, number>>> },
+    ])
+  );
   const align = (snapshot.alignment as Record<string, { btc?: { inBand: boolean; driftPct?: number }; spy?: { inBand: boolean; driftPct?: number } } | undefined>) ?? {};
+
+  const tripwireResults = scenarioConfig
+    ? scoreTripwires({
+        latestSnapshot: {
+          week_ending: snapshot.week_ending,
+          active_scenario: activeScenarioKey,
+          alignment: align,
+        },
+        prevSnapshot: prevSnapshot
+          ? {
+              week_ending: prevSnapshot.week_ending,
+              active_scenario: (prevSnapshot.active_scenario as ScenarioKey) ?? "base",
+              alignment: (prevSnapshot.alignment as Record<string, { btc?: { inBand: boolean; driftPct?: number }; spy?: { inBand: boolean; driftPct?: number } } | undefined>) ?? {},
+            }
+          : null,
+        latestIndicators: evidence.indicatorRows,
+        defsByKey: defsByKeyForTripwire,
+        scenarioConfig,
+      })
+    : [];
+  const tripwireSummary = tripwireResults.length > 0 ? summarizeTripwires(tripwireResults) : undefined;
 
   const brief = buildWeeklyBrief({
     latestSnapshot: {
@@ -108,6 +136,7 @@ export default async function BriefDetailPage({
         shareMode={shareMode}
         lastComputedWeekEnding={findLastComputedAlignmentWeek(snapshotsForLastComputed)}
         nerdMode={nerdMode}
+        tripwireSummary={tripwireSummary}
       />
     </div>
   );

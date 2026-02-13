@@ -1,6 +1,9 @@
 import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabaseClient";
 import { findLastComputedAlignmentWeek } from "@/lib/alignmentHelpers";
+import { scoreTripwires, summarizeTripwires } from "@/lib/tripwireStatus";
+import { buildWhatChangedBullets } from "@/lib/whatChanged";
+import { getEvidenceForWeek } from "@/lib/getEvidenceForWeek";
 import { ForecastAtAGlance } from "@/components/ForecastAtAGlance";
 import { NearTermMap } from "@/components/NearTermMap";
 import { PredictionsAtAGlanceStrip } from "@/components/PredictionsAtAGlanceStrip";
@@ -9,6 +12,7 @@ import { ScenarioComparisonGrid } from "@/components/ScenarioComparisonGrid";
 import { ThisWeekVsForecast } from "@/components/ThisWeekVsForecast";
 import { TimeboxStrip } from "@/components/TimeboxStrip";
 import { TripwiresSection } from "@/components/TripwiresSection";
+import { WhatChangedCard } from "@/components/WhatChangedCard";
 import type { ForecastConfig, PeriodBand, ScenarioKey } from "@/lib/types";
 
 export const revalidate = 60;
@@ -65,17 +69,71 @@ export default async function PredictionsPage({
     .limit(8);
 
   const snapshot = snapshots?.[0] ?? null;
+  const prevSnapshot = snapshots?.[1] ?? null;
   const snapshotsForSparkline = (snapshots ?? []).slice(0, 8).reverse();
 
-  const config = forecast?.config as ForecastConfig | null;
-  const factor = snapshot?.spx_factor ?? config?.meta?.spxToSpyFactor ?? 0.1;
+  const [evidence, prevEvidence] = await Promise.all([
+    snapshot ? getEvidenceForWeek(supabase, String(snapshot.week_ending)) : Promise.resolve({ indicatorRows: [], definitions: [] }),
+    prevSnapshot ? getEvidenceForWeek(supabase, String(prevSnapshot.week_ending)) : Promise.resolve({ indicatorRows: [], definitions: [] }),
+  ]);
 
+  const config = forecast?.config as ForecastConfig | null;
   const activeScenario = (snapshot?.active_scenario as ScenarioKey) ?? "base";
-  const periods = config?.scenarios?.[activeScenario]?.periods ?? [];
-  const currentPeriodIndex = findCurrentPeriodIndex(periods, snapshot?.week_ending ?? "");
   const scenario = config?.scenarios?.[activeScenario];
   const checkpoints = scenario?.checkpoints ?? [];
   const invalidations = scenario?.invalidations ?? [];
+
+  const defsByKey = Object.fromEntries(
+    evidence.definitions.map((d) => [
+      d.key,
+      { name: d.name, weights: d.weights as Record<string, Partial<Record<string, number>>> },
+    ])
+  );
+  const defsByKeyName = Object.fromEntries(evidence.definitions.map((d) => [d.key, d.name]));
+
+  const tripwireResults =
+    snapshot && scenario
+      ? scoreTripwires({
+          latestSnapshot: {
+            week_ending: snapshot.week_ending,
+            active_scenario: activeScenario,
+            alignment: snapshot.alignment as Record<string, { btc?: { inBand: boolean; driftPct?: number }; spy?: { inBand: boolean; driftPct?: number } } | undefined>,
+          },
+          prevSnapshot: prevSnapshot
+            ? {
+                week_ending: prevSnapshot.week_ending,
+                active_scenario: prevSnapshot.active_scenario as ScenarioKey,
+                alignment: prevSnapshot.alignment as Record<string, { btc?: { inBand: boolean; driftPct?: number }; spy?: { inBand: boolean; driftPct?: number } } | undefined>,
+              }
+            : null,
+          latestIndicators: evidence.indicatorRows,
+          defsByKey,
+          scenarioConfig: { checkpoints, invalidations },
+        })
+      : [];
+
+  const whatChangedBullets =
+    snapshot && prevSnapshot
+      ? buildWhatChangedBullets({
+          latestSnapshot: {
+            week_ending: snapshot.week_ending,
+            active_scenario: activeScenario,
+            alignment: snapshot.alignment as Record<string, { btc?: { inBand: boolean; driftPct?: number }; spy?: { inBand: boolean; driftPct?: number } } | undefined>,
+          },
+          prevSnapshot: {
+            week_ending: prevSnapshot.week_ending,
+            active_scenario: prevSnapshot.active_scenario as ScenarioKey,
+            alignment: prevSnapshot.alignment as Record<string, { btc?: { inBand: boolean; driftPct?: number }; spy?: { inBand: boolean; driftPct?: number } } | undefined>,
+          },
+          indicatorLatest: evidence.indicatorRows,
+          indicatorPrev: prevEvidence.indicatorRows,
+          defsByKey: defsByKeyName,
+        })
+      : [];
+
+  const factor = snapshot?.spx_factor ?? config?.meta?.spxToSpyFactor ?? 0.1;
+  const periods = config?.scenarios?.[activeScenario]?.periods ?? [];
+  const currentPeriodIndex = findCurrentPeriodIndex(periods, snapshot?.week_ending ?? "");
   const currentPeriod = findCurrentPeriod(periods, snapshot?.week_ending ?? "");
 
   return (
@@ -102,6 +160,9 @@ export default async function PredictionsPage({
             checkpointsCount={checkpoints.length}
             invalidationsCount={invalidations.length}
           />
+          {snapshot && whatChangedBullets.length > 0 && (
+            <WhatChangedCard bullets={whatChangedBullets} shareMode={shareMode} />
+          )}
           {snapshot && (
             <section id="this-week" className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-4">
               <ThisWeekVsForecast
@@ -134,6 +195,7 @@ export default async function PredictionsPage({
                 checkpoints={checkpoints}
                 invalidations={invalidations}
                 id="tripwires"
+                tripwireResults={tripwireResults}
               />
             </div>
             <div id="comparison" className="mt-6">
