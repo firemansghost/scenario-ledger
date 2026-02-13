@@ -5,6 +5,7 @@ import { computeSupportDelta } from "@/lib/evidenceSupport";
 import { scoreTripwires, summarizeTripwires } from "@/lib/tripwireStatus";
 import { computePathIntegrity } from "@/lib/pathIntegrity";
 import { buildPathIntegrityExplain } from "@/lib/pathIntegrityExplain";
+import { buildWeeklyPlaybook } from "@/lib/playbook";
 import { buildWhatChangedBullets } from "@/lib/whatChanged";
 import { getEvidenceForWeek } from "@/lib/getEvidenceForWeek";
 import { ForecastAtAGlance } from "@/components/ForecastAtAGlance";
@@ -16,6 +17,7 @@ import { ThisWeekVsForecast } from "@/components/ThisWeekVsForecast";
 import { TimeboxStrip } from "@/components/TimeboxStrip";
 import { TripwiresSection } from "@/components/TripwiresSection";
 import { WhatChangedCard } from "@/components/WhatChangedCard";
+import { WeeklyPlaybookCard } from "@/components/WeeklyPlaybookCard";
 import type { ForecastConfig, PeriodBand, ScenarioKey } from "@/lib/types";
 
 export const revalidate = 60;
@@ -177,6 +179,36 @@ export default async function PredictionsPage({
         })
       : null;
 
+  const align = (snapshot?.alignment as Record<string, { btc?: { inBand: boolean; driftPct?: number }; spy?: { inBand: boolean; driftPct?: number } } | undefined>) ?? {};
+  const baseAlign = align[activeScenario] ?? align["base"];
+  const btcDrift = baseAlign?.btc?.inBand ? 0 : (baseAlign?.btc?.driftPct ?? null);
+  const eqDrift = baseAlign?.spy?.inBand ? 0 : (baseAlign?.spy?.driftPct ?? null);
+
+  const weeklyPlaybook =
+    pathIntegrity && scenario && snapshot
+      ? buildWeeklyPlaybook({
+          latestSnapshot: {
+            week_ending: snapshot.week_ending,
+            active_scenario: activeScenario,
+            alignment: snapshot.alignment as Record<string, { btc?: { inBand: boolean; driftPct?: number }; spy?: { inBand: boolean; driftPct?: number } } | undefined>,
+          },
+          prevSnapshot: prevSnapshot
+            ? {
+                week_ending: prevSnapshot.week_ending,
+                active_scenario: prevSnapshot.active_scenario as ScenarioKey,
+                alignment: prevSnapshot.alignment as Record<string, { btc?: { inBand: boolean; driftPct?: number }; spy?: { inBand: boolean; driftPct?: number } } | undefined>,
+              }
+            : null,
+          scenarioConfig: { checkpoints, invalidations },
+          tripwireResults,
+          tripwireSummary: tripwireSummary ?? { confirming: 0, watching: 0, risk: 0 },
+          supportDelta,
+          integrity: pathIntegrity,
+          btcDrift,
+          eqDrift,
+        })
+      : null;
+
   const pathIntegrityExplain =
     pathIntegrity && snapshot && activeScenario
       ? buildPathIntegrityExplain({
@@ -256,6 +288,26 @@ export default async function PredictionsPage({
           />
           {snapshot && whatChangedBullets.length > 0 && (
             <WhatChangedCard bullets={whatChangedBullets} shareMode={shareMode} />
+          )}
+          {weeklyPlaybook && snapshot && (
+            <section id="playbook">
+              <p className="mb-3 text-sm text-zinc-400">
+                This is the weekly loop: what to watch, and what would force a re-read.
+              </p>
+              <WeeklyPlaybookCard
+                playbook={weeklyPlaybook}
+                weekEnding={String(snapshot.week_ending)}
+                shareMode={shareMode}
+                nerdMode={nerdMode}
+                links={{
+                  forecastBrief: shareMode ? "/predictions?share=1#tripwires" : "/predictions#tripwires",
+                  tripwiresAnchor: shareMode ? "/predictions?share=1#tripwires" : "/predictions#tripwires",
+                  alignment: shareMode ? "/alignment?share=1" : "/alignment",
+                  evidence: shareMode ? "/evidence?share=1" : "/evidence",
+                  briefsWeek: shareMode ? `/briefs/${snapshot.week_ending}?share=1` : `/briefs/${snapshot.week_ending}`,
+                }}
+              />
+            </section>
           )}
           {snapshot && (
             <section id="this-week" className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-4">
