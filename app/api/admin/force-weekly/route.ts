@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { archiveWriteDisabledResponse, SCENARIO_LEDGER_WRITES_ENABLED } from "@/lib/archiveMode";
 import { createServiceRoleClient } from "@/lib/supabaseServer";
 import { getMostRecentFriday } from "@/lib/dates";
 import { sanitizeLogMessage } from "@/lib/logSanitize";
@@ -14,6 +15,8 @@ function requireAdminSecret(req: Request): boolean {
  * Force-run weekly ingest (most recent Friday). Requires ADMIN_SECRET when set.
  */
 export async function POST(req: Request) {
+  if (!SCENARIO_LEDGER_WRITES_ENABLED) return archiveWriteDisabledResponse();
+
   if (process.env.ADMIN_SECRET && !requireAdminSecret(req)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

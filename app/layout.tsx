@@ -34,6 +34,16 @@ export default function RootLayout({
           <header className="mb-8">
             <h1 className="text-2xl font-bold">ScenarioLedger</h1>
             <p className="text-muted-foreground">Frozen forecasts. Weekly receipts.</p>
+            <aside
+              aria-label="Project status"
+              className="mt-4 rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-100"
+            >
+              <p className="font-semibold">Project status: On hold</p>
+              <p className="mt-1 text-amber-100/80">
+                ScenarioLedger is preserved as a read-only research archive. New development and
+                scheduled data updates are paused.
+              </p>
+            </aside>
             <Suspense fallback={<NavFallback />}>
               <Nav />
             </Suspense>

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { archiveWriteDisabledResponse, SCENARIO_LEDGER_WRITES_ENABLED } from "@/lib/archiveMode";
 import { createServiceRoleClient } from "@/lib/supabaseServer";
 
 function requireAdminSecret(req: Request): boolean {
@@ -8,6 +9,8 @@ function requireAdminSecret(req: Request): boolean {
 }
 
 export async function POST(req: Request) {
+  if (!SCENARIO_LEDGER_WRITES_ENABLED) return archiveWriteDisabledResponse();
+
   if (process.env.ADMIN_SECRET && !requireAdminSecret(req)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -32,6 +35,8 @@ export async function POST(req: Request) {
 }
 
 export async function DELETE(req: Request) {
+  if (!SCENARIO_LEDGER_WRITES_ENABLED) return archiveWriteDisabledResponse();
+
   if (process.env.ADMIN_SECRET && !requireAdminSecret(req)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
