@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { archiveWriteDisabledResponse, SCENARIO_LEDGER_WRITES_ENABLED } from "@/lib/archiveMode";
 import { createServiceRoleClient } from "@/lib/supabaseServer";
 import { buildHistoryRollups } from "@/lib/buildHistoryRollups";
 
@@ -16,6 +17,8 @@ function requireAdminSecret(req: Request): boolean {
  * Requires ADMIN_SECRET when set. Nerd Mode required to reach Admin UI.
  */
 export async function POST(req: Request) {
+  if (!SCENARIO_LEDGER_WRITES_ENABLED) return archiveWriteDisabledResponse();
+
   if (process.env.ADMIN_SECRET && !requireAdminSecret(req)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 import { createServiceRoleClient } from "@/lib/supabaseServer";
+import { archiveWriteDisabledResponse, SCENARIO_LEDGER_WRITES_ENABLED } from "@/lib/archiveMode";
 
 export async function POST(req: Request) {
+  if (!SCENARIO_LEDGER_WRITES_ENABLED) return archiveWriteDisabledResponse();
+
   const body = await req.json().catch(() => ({}));
   const version = body.version as number | undefined;
   const name = (body.name as string) ?? "Forecast";

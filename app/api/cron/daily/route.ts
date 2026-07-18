@@ -7,6 +7,7 @@ import { fetchStooqSpyLatest } from "@/lib/sources/stooq";
 import { fetchAlphaVantageDaily } from "@/lib/sources/alphavantage";
 import { fetchFredLatestForSeries } from "@/lib/sources/fred";
 import type { DailyDataPoint } from "@/lib/types";
+import { archiveWriteDisabledResponse, SCENARIO_LEDGER_WRITES_ENABLED } from "@/lib/archiveMode";
 
 /** Vercel Cron invokes GET; delegate to POST so Admin can still call POST. */
 export async function GET(req: NextRequest) {
@@ -14,6 +15,8 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: Request) {
+  if (!SCENARIO_LEDGER_WRITES_ENABLED) return archiveWriteDisabledResponse();
+
   const secret = req.headers.get("authorization")?.replace("Bearer ", "") ?? req.headers.get("x-cron-secret") ?? "";
   const expected = process.env.CRON_SECRET;
   if (!expected || secret !== expected) {
